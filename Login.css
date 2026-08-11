@@ -1,0 +1,211 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Jost', sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #FFF9E6 0%, #F5E6CA 100%);
+    color: #2C221E;
+}
+
+
+.main {
+    position: relative;
+    width: 380px;
+    height: 650px;
+    background: #FFFDF7;
+    border-radius: 28px;
+    box-shadow: 0 20px 40px rgba(44, 34, 30, 0.12);
+    overflow: hidden;
+}
+
+
+#chk {
+    display: none;
+}
+
+
+.signup, .login {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+label {
+    color: #2C221E;
+    font-size: 2.1rem;
+    font-weight: 700;
+    justify-content: center;
+    display: flex;
+    margin: 20px 0 10px 0;
+    cursor: pointer;
+    transition: transform 0.5s ease-in-out, color 0.3s ease, letter-spacing 0.3s ease;
+}
+
+.signup label:hover {
+    color: #E6A100;
+    letter-spacing: 1px;
+}
+
+
+input, select {
+    width: 82%;
+    height: 42px;
+    background: #F7F4EB;
+    border: 1.5px solid transparent;
+    border-radius: 12px;
+    padding: 0 16px;
+    font-size: 0.95rem;
+    color: #2C221E;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+input::placeholder, select {
+    color: #8C827A;
+}
+
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%3C8C827A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    cursor: pointer;
+}
+
+
+input:focus, select:focus {
+    border-color: #FFB703;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(255, 183, 3, 0.2);
+}
+
+
+button {
+    width: 82%;
+    height: 46px;
+    margin-top: 8px;
+    color: #2C221E;
+    background: #FFB703;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 18px rgba(255, 183, 3, 0.35);
+}
+
+button:hover {
+    background: #FFA700;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(255, 183, 3, 0.45);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+
+.login {
+    height: 650px;
+    background: #2C221E;
+    border-radius: 60% / 10%;
+    transform: translateY(-138px);
+    transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.login label {
+    color: #FFB703;
+    transform: scale(0.6);
+    margin-top: 15px;
+    
+}
+
+.login label:hover {
+    color: #FFFDF7;
+    letter-spacing: 1px;
+}
+
+.login input {
+    background: #3D312A;
+    color: #FFFDF7;
+}
+
+.login input::placeholder {
+    color: #A0958C;
+}
+
+.login input:focus {
+    background: #463931;
+    border-color: #FFB703;
+}
+
+.login button {
+    background: #FFB703;
+    color: #2C221E;
+}
+
+#chk:checked ~ .login {
+    transform: translateY(-585px);
+}
+
+#chk:checked ~ .login label {
+    transform: scale(1);
+    margin-top: 30px;
+}
+
+#chk:checked ~ .signup label {
+    transform: scale(0.6);
+}
+.forgot-pass {
+    color: #231f91;
+    font-size: 0.9rem;
+    text-decoration: none;
+    margin-top: -2px;
+    margin-bottom: 4px;
+    transition: color 0.3s ease;
+}
+
+.forgot-pass:hover {
+    color: #FFB703;
+    text-decoration: underline;
+}
+
+input.valid {
+    border-color: #2A9D8F !important;
+    background: #F0FDF4;
+}
+
+input.invalid {
+    border-color: #E63946 !important;
+    background: #FFF5F5;
+}
+
+.match-message {
+    font-size: 0.85rem;
+    font-weight: 700;
+    height: 18px; 
+}
+
+.match-message.success {
+    color: #2A9D8F;
+}
+
+.match-message.error {
+    color: #E63946;
+}

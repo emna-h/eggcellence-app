@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Eggcellence</title>
+    
+    <link rel="icon" type="image/png" href="egg-icon.png">
+    <link rel="stylesheet" href="UserDashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+   
+    <header class="navbar">
+        <div class="logo-area">
+          
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+                <span class="toggle-icon">☰</span>
+                <span class="tooltip-text" id="toggleTooltip">Show Sidebar</span>
+            </button>
+
+            <img src="egg-icon.png" alt="Eggcellence Logo" class="logo-img">
+            <span class="brand-name">Eggcellence</span>
+            <span class="role-tag">Quality Inspector</span>
+        </div>
+        <div class="user-profile">
+            <a href="Login.html" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    
+    <div class="dashboard-layout">
+
+        
+        <aside class="sidebar collapsed" id="sidebar">
+            
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <img src="egg-icon.png" alt="Eggcellence Logo" class="sidebar-logo">
+                    <span>Eggcellence</span>
+                </div>
+                <button class="sidebar-close-btn" id="sidebarCloseBtn" title="Collapse Sidebar">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H9V5h10v14z"/>
+                    </svg>
+                </button>
+            </div>
+
+            
+            <div class="sidebar-scroll-content">
+                <nav class="sidebar-menu">
+                    <button class="nav-item active" data-target="home">
+                        
+                        <span class="nav-label">Home Page</span>
+                    </button>
+                    <button class="nav-item" data-target="add-inspection">
+                        
+                        <span class="nav-label">Add New Inspection</span>
+                    </button>
+                    <button class="nav-item" data-target="my-inspections">
+                        
+                        <span class="nav-label">My Inspections</span>
+                    </button>
+                </nav>
+            </div>
+
+        </aside>
+
+        
+        <main class="main-content">
+
+            
+            <div id="page-home" class="page-view active">
+                <section class="reference-panel">
+                    <div class="reference-photo">
+                        <img src="egg1.jpeg" alt="Eggs being inspected for quality">
+                    </div>
+
+                    <div class="reference-content">
+                        <div class="reference-heading">
+                            <h2 style="color: #2A9D8F;">Grading Standards</h2>
+                            <p>Reference thresholds used for every quality classification.</p>
+                        </div>
+
+                        <div class="grade-list">
+                            <div class="grade-row">
+                                <span class="grade-tag grade-aa">AA</span>
+                                <span class="grade-range">Haugh Unit ≥ 72</span>
+                                <span class="grade-desc">Firm, high-quality — premium market grade</span>
+                            </div>
+                            <div class="grade-row">
+                                <span class="grade-tag grade-a">A</span>
+                                <span class="grade-range">Haugh Unit 60–71</span>
+                                <span class="grade-desc">Standard market quality</span>
+                            </div>
+                            <div class="grade-row">
+                                <span class="grade-tag grade-b">B</span>
+                                <span class="grade-range">Haugh Unit 31–59</span>
+                                <span class="grade-desc">Lower quality, limited retail use</span>
+                            </div>
+                            <div class="grade-row">
+                                <span class="grade-tag grade-c">C</span>
+                                <span class="grade-range">Haugh Unit &lt; 31</span>
+                                <span class="grade-desc">Reject — not suitable for sale</span>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="reference-heading">
+                            <h2 style="color: #2A9D8F;">What Each Measurement Means</h2>
+                        </div>
+
+                        <div class="measure-list">
+                            <div class="measure-row">
+                                <span class="measure-name">Poids</span>
+                                <span class="measure-desc">Weighed on a calibrated scale, in grams</span>
+                            </div>
+                            <div class="measure-row">
+                                <span class="measure-name">Hauteur</span>
+                                <span class="measure-desc">Albumen height, measured with a micrometer</span>
+                            </div>
+                            <div class="measure-row">
+                                <span class="measure-name">Fraîcheur (HU)</span>
+                                <span class="measure-desc">Calculated from weight and height via the Haugh formula</span>
+                            </div>
+                            <div class="measure-row">
+                                <span class="measure-name">Charge de rupture</span>
+                                <span class="measure-desc">Shell strength — force required to crack, in Newtons</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            
+            <div id="page-add-inspection" class="page-view hidden">
+                <section class="form-card">
+                    <div class="card-header">
+                        <h2>Log Egg Quality Sample</h2>
+                        <p>Enter physical laboratory measurement metrics.</p>
+                    </div>
+
+                    <form id="inspectionForm">
+                        
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label for="datetime">1. Date et heure <span class="required">*</span></label>
+                                <input type="datetime-local" id="datetime" required>
+                                <small class="help-text">Auto-filled with current date/time. Cannot be in the future.</small>
+                            </div>
+                        </div>
+
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="poids">2. Poids (g) <span class="required">*</span></label>
+                                <input type="number" id="poids" min="20" max="90" step="0.01" placeholder="20.00 to 90.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="hauteur">3. Hauteur (mm) <span class="required">*</span></label>
+                                <input type="number" id="hauteur" min="2" max="12" step="0.01" placeholder="2.00 to 12.00" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="coloration">4. Coloration <span class="required">*</span></label>
+                                <input type="number" id="coloration" min="7" max="17" step="0.01" placeholder="7.00 to 17.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="fraicheur">5. Fraîcheur (Haugh Unit) <span class="required">*</span></label>
+                                <input type="number" id="fraicheur" min="20" max="110" step="0.01" placeholder="20.00 to 110.00" required>
+                            </div>
+                        </div>
+
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="classement">6. Classement <span class="required">*</span></label>
+                                <select id="classement" required>
+                                    <option value="" disabled selected>Select Grade</option>
+                                    <option value="AA">Grade AA</option>
+                                    <option value="A">Grade A</option>
+                                    <option value="B">Grade B</option>
+                                    <option value="C">Grade C</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chargeRupture">7. Charge de rupture (N) <span class="required">*</span></label>
+                                <input type="number" id="chargeRupture" min="10" max="70" step="0.01" placeholder="10.00 to 70.00 N" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn" id="submitBtn">Submit Quality Sample</button>
+                    </form>
+                </section>
+            </div>
+
+            
+            <div id="page-my-inspections" class="page-view hidden">
+                <section class="table-card">
+                    <div class="card-header">
+                        <h2> My Inspections History</h2>
+                        <p>Logs added by you. You can review or delete entries as needed.</p>
+                    </div>
+
+                    <div class="table-responsive">
+                        <div class="table-responsive">
+    <table id="logsTable">
+        <thead>
+            <tr>
+                <th>Date & Time</th>
+                <th>Poids</th>
+                <th>Fraîcheur</th>
+                <th>Rupture</th>
+                <th>Classement</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr id="emptyState">
+                <td colspan="6" class="empty-state">No inspections logged yet. Submit your first sample to see it here.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+                    </div>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+    
+    <div class="toast-container" id="toastContainer"></div>
+
+    
+     <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+        const sidebar = document.getElementById('sidebar');
+        const toggleTooltip = document.getElementById('toggleTooltip');
+
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+            if (sidebar.classList.contains('collapsed')) {
+                toggleTooltip.textContent = 'Show Sidebar';
+            } else {
+                toggleTooltip.textContent = 'Hide Sidebar';
+            }
+        }
+
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        if (sidebarCloseBtn) {
+            sidebarCloseBtn.addEventListener('click', toggleSidebar);
+        }
+
+        
+        const navItems = document.querySelectorAll('.nav-item');
+        const pageViews = document.querySelectorAll('.page-view');
+
+        navItems.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetPage = btn.getAttribute('data-target');
+
+                navItems.forEach(i => i.classList.remove('active'));
+                pageViews.forEach(p => p.classList.add('hidden'));
+
+                btn.classList.add('active');
+                document.getElementById(`page-${targetPage}`).classList.remove('hidden');
+            });
+        });
+
+        
+        const datetimeInput = document.getElementById('datetime');
+        const form = document.getElementById('inspectionForm');
+        const logsTableBody = document.querySelector('#logsTable tbody');
+        const submitBtn = document.getElementById('submitBtn');
+        const toastContainer = document.getElementById('toastContainer');
+
+        function getCurrentDateTime() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            return now.toISOString().slice(0, 16);
+        }
+
+        const nowFormatted = getCurrentDateTime();
+        if (datetimeInput) {
+            datetimeInput.value = nowFormatted;
+            datetimeInput.max = nowFormatted;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'error' ? 'toast-error' : ''}`;
+            toast.innerHTML = `<span>${type === 'error' ? '❌' : '✓'}</span><span>${message}</span>`;
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3600);
+        }
+
+        
+        function showEmptyState() {
+            const emptyRow = document.createElement('tr');
+            emptyRow.id = 'emptyState';
+            emptyRow.innerHTML = `<td colspan="6" class="empty-state">No inspections logged yet. Submit your first sample to see it here.</td>`;
+            logsTableBody.appendChild(emptyRow);
+        }
+
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const selectedDate = new Date(datetimeInput.value);
+                if (selectedDate > new Date()) {
+                    showToast('Date and time cannot be in the future.', 'error');
+                    return;
+                }
+
+                submitBtn.disabled = true;
+
+                
+                const emptyRow = document.getElementById('emptyState');
+                if (emptyRow) emptyRow.remove();
+
+                const datetimeVal = datetimeInput.value.replace('T', ' ');
+                const poidsVal = parseFloat(document.getElementById('poids').value).toFixed(2);
+                const fraicheurVal = parseFloat(document.getElementById('fraicheur').value).toFixed(2);
+                const classementVal = document.getElementById('classement').value;
+                const chargeVal = parseFloat(document.getElementById('chargeRupture').value).toFixed(2);
+
+                let badgeClass = 'badge-aa';
+                if (classementVal === 'A') badgeClass = 'badge-a';
+                if (classementVal === 'B') badgeClass = 'badge-b';
+                if (classementVal === 'C') badgeClass = 'badge-c';
+
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td><strong>${datetimeVal}</strong></td>
+                    <td>${poidsVal} g</td>
+                    <td>${fraicheurVal} HU</td>
+                    <td>${chargeVal} N</td>
+                    <td><span class="badge ${badgeClass}">Grade ${classementVal}</span></td>
+                    <td><button class="delete-btn">🗑️ Delete</button></td>
+                `;
+
+                logsTableBody.insertBefore(newRow, logsTableBody.firstChild);
+                showToast('Sample record successfully logged!');
+
+                form.reset();
+                const updatedNow = getCurrentDateTime();
+                datetimeInput.value = updatedNow;
+                datetimeInput.max = updatedNow;
+
+                submitBtn.disabled = false;
+            });
+        }
+        
+
+        if (logsTableBody) {
+            logsTableBody.addEventListener('click', function(e) {
+                if (e.target.classList.contains('delete-btn')) {
+                    const row = e.target.closest('tr');
+                    row.remove();
+                    showToast('Inspection record deleted.', 'error');
+
+                    
+                    if (logsTableBody.children.length === 0) {
+                        showEmptyState();
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
