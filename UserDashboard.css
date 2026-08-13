@@ -470,6 +470,40 @@ input:focus, select:focus {
     transform: none;
 }
 
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.form-actions .submit-btn {
+    margin-top: 0;
+    flex: 1;
+}
+
+.cancel-edit-btn {
+    flex: 1;
+    height: 46px;
+    background: transparent;
+    color: #8C827A;
+    font-weight: 700;
+    font-size: 1rem;
+    border: 1.5px solid #E6DEC8;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancel-edit-btn:hover {
+    background: #F7F4EB;
+    color: #2C221E;
+    border-color: #D8CFB8;
+}
+
+.cancel-edit-btn.hidden {
+    display: none;
+}
+
 .table-responsive {
     overflow-x: auto;
 }
@@ -518,6 +552,23 @@ tbody tr:hover {
 .badge-b  { background: #FFF8E1; color: #E6A100; }
 .badge-c  { background: #FFEBEE; color: #E63946; }
 
+.edit-btn {
+    background: transparent;
+    border: 1px solid #1976D2;
+    color: #1976D2;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 6px;
+}
+
+.edit-btn:hover {
+    background: #1976D2;
+    color: #FFFFFF;
+}
 
 .delete-btn {
     background: transparent;
@@ -585,5 +636,8 @@ tbody tr:hover {
     }
     .reference-panel {
         grid-template-columns: 1fr;
+    }
+    .form-actions {
+        flex-direction: column;
     }
 }
