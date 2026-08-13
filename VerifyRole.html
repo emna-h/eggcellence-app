@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="egg-icon.png">
+    <title>Eggcellence - Security Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="VerifyRole.css">
+</head>
+<body>
+
+    <div class="verify-card">
+        <div class="icon-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FFB703" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+            </svg>
+        </div>
+
+        <h2>Security Check</h2>
+        <p class="subtitle">Please confirm your identity to complete account activation.</p>
+
+        <div class="role-pill-container">
+            <button type="button" class="role-pill active" id="userPill" onclick="switchRole('User')">
+                Normal User
+            </button>
+            <button type="button" class="role-pill" id="adminPill" onclick="switchRole('Admin')">
+                🔑 Admin Access
+            </button>
+        </div>
+
+        <form id="verifyForm">
+            <p id="instructionText" class="instruction">
+                Standard authorization required. Enter your User Access Key:
+            </p>
+
+            <div id="userKeyContainer" class="key-group">
+                <div class="input-wrapper">
+                    <input 
+                        type="password" 
+                        id="userAccessKey" 
+                        placeholder="Enter User Access Key"
+                        required
+                    >
+                </div>
+                <small class="key-hint">Key provided by your floor manager or onboarding team.</small>
+            </div>
+
+            
+            <div id="adminKeyContainer" class="key-group hidden">
+                <div class="input-wrapper">
+                    <input 
+                        type="password" 
+                        id="adminSecretKey" 
+                        placeholder="Enter Master Admin Key"
+                    >
+                    <span class="key-icon"></span>
+                </div>
+                <small class="key-hint">Contact system administrator if you lost your master key.</small>
+            </div>
+
+            <span id="statusMessage" class="status-message"></span>
+
+            <button type="submit" id="verifyBtn">Verify & Access Dashboard</button>
+        </form>
+
+        <div class="card-footer">
+            <p class="help-text">Lost your access key? <a href="contact.html">Contact Supervisor</a></p>
+            <a href="Login.html" class="back-link">← Back to Sign In</a>
+        </div>
+    </div>
+
+    <script>
+        let currentRole = 'User';
+
+        const instructionText = document.getElementById('instructionText');
+        const userKeyContainer = document.getElementById('userKeyContainer');
+        const adminKeyContainer = document.getElementById('adminKeyContainer');
+        const userAccessKey = document.getElementById('userAccessKey');
+        const adminSecretKey = document.getElementById('adminSecretKey');
+        const userPill = document.getElementById('userPill');
+        const adminPill = document.getElementById('adminPill');
+        const statusMessage = document.getElementById('statusMessage');
+
+        
+        function switchRole(role) {
+            currentRole = role;
+            statusMessage.textContent = '';
+
+            if (role === 'Admin') {
+                adminPill.classList.add('active');
+                userPill.classList.remove('active');
+                
+                instructionText.textContent = "Admin authorization required. Enter your Master Security Key:";
+                userKeyContainer.classList.add('hidden');
+                adminKeyContainer.classList.remove('hidden');
+                
+                adminSecretKey.required = true;
+                userAccessKey.required = false;
+                userAccessKey.value = '';
+            } else {
+                userPill.classList.add('active');
+                adminPill.classList.remove('active');
+
+                instructionText.textContent = "Standard authorization required. Enter your User Access Key:";
+                userKeyContainer.classList.remove('hidden');
+                adminKeyContainer.classList.add('hidden');
+
+                userAccessKey.required = true;
+                adminSecretKey.required = false;
+                adminSecretKey.value = '';
+            }
+        }
+
+        document.getElementById('verifyForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            if (currentRole === 'Admin') {
+                if (adminSecretKey.value === "2222") {
+                    statusMessage.textContent = "✓ Master Admin Key verified! Redirecting...";
+                    statusMessage.className = "status-message success";
+                    setTimeout(() => {
+                        window.location.href = "admin.html";
+                    }, 1500);
+                } else {
+                    statusMessage.textContent = "✗ Invalid Master Admin Key ";
+                    statusMessage.className = "status-message error";
+                }
+            } else {
+                
+                if (userAccessKey.value === "1111") {
+                    statusMessage.textContent = "✓ User Access Key verified! Redirecting...";
+                    statusMessage.className = "status-message success";
+                    setTimeout(() => {
+                        window.location.href = "UserDashboard.html";
+                    }, 1500);
+                } else {
+                    statusMessage.textContent = "✗ Invalid User Access Key ";
+                    statusMessage.className = "status-message error";
+                }
+            }
+        });
+    </script>
+</body>
+</html>

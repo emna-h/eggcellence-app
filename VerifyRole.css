@@ -1,0 +1,235 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Jost', sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #FFF9E6 0%, #F5E6CA 100%);
+    color: #2C221E;
+}
+
+.verify-card {
+    width: 400px;
+    background: #FFFDF7;
+    border-radius: 28px;
+    padding: 35px 30px;
+    box-shadow: 0 20px 40px rgba(44, 34, 30, 0.12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.icon-badge {
+    width: 64px;
+    height: 64px;
+    background: #2C221E;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 20px rgba(44, 34, 30, 0.2);
+}
+
+h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2C221E;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: #8C827A;
+    margin-bottom: 20px;
+}
+
+.role-pill-container {
+    display: flex;
+    gap: 8px;
+    background: #F7F4EB;
+    padding: 4px;
+    border-radius: 14px;
+    margin-bottom: 22px;
+    width: 100%;
+}
+
+.role-pill {
+    flex: 1;
+    padding: 8px 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: #8C827A;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.role-pill.active {
+    background: #FFB703;
+    color: #2C221E;
+    box-shadow: 0 4px 12px rgba(255, 183, 3, 0.3);
+}
+
+form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.instruction {
+    font-size: 0.88rem;
+    color: #2C221E;
+    font-weight: 500;
+    margin-bottom: 18px;
+}
+
+.otp-group {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 18px;
+}
+
+.otp-input {
+    width: 44px;
+    height: 52px;
+    background: #F7F4EB;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2C221E;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.otp-input:focus {
+    border-color: #FFB703;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(255, 183, 3, 0.2);
+}
+
+
+.input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.admin-key-group input {
+    width: 100%;
+    height: 48px;
+    background: #F7F4EB;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 0 40px 0 16px;
+    font-size: 0.95rem;
+    color: #2C221E;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.admin-key-group input:focus {
+    border-color: #FFB703;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(255, 183, 3, 0.2);
+}
+
+.key-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+}
+
+.key-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: #8C827A;
+    margin-top: 6px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+button[type="submit"] {
+    width: 100%;
+    height: 48px;
+    color: #2C221E;
+    background: #FFB703;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 18px rgba(255, 183, 3, 0.35);
+    margin-top: 6px;
+}
+
+button[type="submit"]:hover {
+    background: #FFA700;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(255, 183, 3, 0.45);
+}
+
+button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+.status-message {
+    font-size: 0.82rem;
+    font-weight: 600;
+    min-height: 20px;
+    margin-bottom: 8px;
+}
+
+.status-message.success {
+    color: #2A9D8F;
+}
+
+.status-message.error {
+    color: #E63946;
+}
+
+.card-footer {
+    margin-top: 22px;
+    font-size: 0.85rem;
+    color: #8C827A;
+}
+
+.card-footer a {
+    color: #2C221E;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.card-footer a:hover {
+    color: #FFB703;
+    text-decoration: underline;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: #8C827A !important;
+    font-weight: 500 !important;
+}
+
+.back-link:hover {
+    color: #2C221E !important;
+}
