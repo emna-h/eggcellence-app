@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="egg-icon.png">
+    <title>Eggcellence - Contact & Support</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="contact.css">
+</head>
+<body>
+
+    <div class="contact-card">
+        <div class="icon-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FFB703" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </div>
+
+        <h2>Contact & Support</h2>
+        <p class="subtitle">Encountering an issue or have a question? Send a ticket directly to operations.</p>
+
+        <form id="contactForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" placeholder="Full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Work Email</label>
+                    <input type="email" id="email" name="email" placeholder="user123@gmail.com" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="facility">Department</label>
+                    <select id="facility" name="facility" required>
+                        <option value="" disabled selected>Select Department</option>
+                        <option value="D1">D1</option>
+                        <option value="D2">D2</option>
+                        <option value="D3">D3</option>
+                        <option value="D4">D4</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="role">Your Role</label>
+                    <select id="role" name="role" required>
+                        <option value="" disabled selected>Select role</option>
+                        <option value="Admin">Admin</option>
+                        <option value="User">User</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group full-width">
+                <label for="category">Issue Category</label>
+                <select id="category" name="category" required>
+                    <option value="" disabled selected>Select topic</option>
+                    <option value="Technical Bug">Technical Bug / App Glitch</option>
+                    <option value="Batch Discrepancy">Batch Entry & Defect Error</option>
+                    <option value="Power BI Report">Power BI & Dashboard Request</option>
+                    <option value="Compliance Audit">Compliance & Audit Data Export</option>
+                    <option value="Feature Suggestion">Feature Request / Feedback</option>
+                    <option value="Lost verification key">Lost verification key</option>
+                </select>
+            </div>
+
+            <div class="form-group full-width">
+                <label>Priority Level</label>
+                <div class="priority-container">
+                    <button type="button" class="priority-btn active-low" data-priority="Low" onclick="selectPriority(this)"> Low</button>
+                    <button type="button" class="priority-btn" data-priority="Medium" onclick="selectPriority(this)"> Medium</button>
+                    <button type="button" class="priority-btn" data-priority="Urgent" onclick="selectPriority(this)"> Urgent</button>
+                </div>
+                <input type="hidden" id="priorityValue" name="priority" value="Low">
+            </div>
+
+            <div class="form-group full-width">
+                <label for="message">Message / Details</label>
+                <textarea id="message" name="message" rows="4" placeholder="Describe the issue, batch ID, or question in detail..." required maxlength="500"></textarea>
+                <div class="char-count"><span id="charNum">0</span>/500</div>
+            </div>
+
+            <div class="form-group full-width">
+                <label>Attachment (Optional screenshot or batch log)</label>
+                <label for="fileUpload" class="file-dropzone">
+                    <span id="fileName">📎 Click to upload file (PNG, JPG, PDF)</span>
+                    <input type="file" id="fileUpload" accept=".png,.jpg,.jpeg,.pdf" onchange="updateFileName(this)">
+                </label>
+            </div>
+
+            <span id="statusMessage" class="status-message"></span>
+
+            <button type="submit" id="sendBtn">Send Support Ticket</button>
+        </form>
+
+        <div class="card-footer">
+            <a href="Login.html" class="back-link">← Return to Login page</a>
+        </div>
+    </div>
+
+    <script>
+        const messageTextarea = document.getElementById('message');
+        const charNum = document.getElementById('charNum');
+
+        messageTextarea.addEventListener('input', () => {
+            charNum.textContent = messageTextarea.value.length;
+        });
+
+        // 2. Priority Selection
+        let selectedPriority = "Low";
+        function selectPriority(btn) {
+            document.querySelectorAll('.priority-btn').forEach(b => {
+                b.className = 'priority-btn';
+            });
+
+            selectedPriority = btn.dataset.priority;
+            document.getElementById('priorityValue').value = selectedPriority;
+
+            if (selectedPriority === 'Low') btn.classList.add('active-low');
+            if (selectedPriority === 'Medium') btn.classList.add('active-med');
+            if (selectedPriority === 'Urgent') btn.classList.add('active-urg');
+        }
+
+        function updateFileName(input) {
+            const fileNameSpan = document.getElementById('fileName');
+            if (input.files && input.files[0]) {
+                fileNameSpan.textContent = `📄 Selected: ${input.files[0].name}`;
+            } else {
+                fileNameSpan.textContent = "📎 Click to upload file (PNG, JPG, PDF)";
+            }
+        }
+
+        document.getElementById('contactForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const statusMessage = document.getElementById('statusMessage');
+            const sendBtn = document.getElementById('sendBtn');
+
+            sendBtn.disabled = true;
+            sendBtn.textContent = "Sending Ticket...";
+
+            setTimeout(() => {
+                statusMessage.textContent = "✓ Support ticket submitted successfully! Ticket #4892";
+                statusMessage.className = "status-message success";
+                sendBtn.style.display = "none";
+                
+                setTimeout(() => {
+                    window.location.href = "Login.html";
+                }, 2000);
+            }, 1200);
+        });
+    </script>
+</body>
+</html>
