@@ -14,7 +14,6 @@ body {
     color: #2C221E;
 }
 
-
 .main {
     position: relative;
     width: 380px;
@@ -25,11 +24,9 @@ body {
     overflow: hidden;
 }
 
-
 #chk {
     display: none;
 }
-
 
 .signup, .login {
     position: relative;
@@ -60,7 +57,6 @@ label {
     letter-spacing: 1px;
 }
 
-
 input, select {
     width: 82%;
     height: 42px;
@@ -87,6 +83,10 @@ select {
     cursor: pointer;
 }
 
+select option {
+    background: #FFFDF7;
+    color: #2C221E;
+}
 
 input:focus, select:focus {
     border-color: #FFB703;
@@ -94,6 +94,33 @@ input:focus, select:focus {
     box-shadow: 0 0 0 4px rgba(255, 183, 3, 0.2);
 }
 
+.password-container {
+    position: relative;
+    width: 82%;
+    display: flex;
+    align-items: center;
+}
+
+.password-container input {
+    width: 100% !important;
+    padding-right: 42px;
+}
+
+.toggle-eye {
+    position: absolute;
+    right: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8C827A;
+    transition: color 0.3s ease;
+    user-select: none;
+}
+
+.toggle-eye:hover {
+    color: #2C221E;
+}
 
 button {
     width: 82%;
@@ -120,6 +147,13 @@ button:active {
     transform: translateY(0);
 }
 
+button:disabled {
+    background: #E5DFC9 !important;
+    color: #A0958C !important;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
 
 .login {
     height: 650px;
@@ -133,7 +167,6 @@ button:active {
     color: #FFB703;
     transform: scale(0.6);
     margin-top: 15px;
-    
 }
 
 .login label:hover {
@@ -155,6 +188,14 @@ button:active {
     border-color: #FFB703;
 }
 
+.login .toggle-eye {
+    color: #A0958C;
+}
+
+.login .toggle-eye:hover {
+    color: #FFB703;
+}
+
 .login button {
     background: #FFB703;
     color: #2C221E;
@@ -172,11 +213,12 @@ button:active {
 #chk:checked ~ .signup label {
     transform: scale(0.6);
 }
+
 .forgot-pass {
-    color: #231f91;
-    font-size: 0.9rem;
+    color: #A0958C;
+    font-size: 0.85rem;
     text-decoration: none;
-    margin-top: -2px;
+    margin-top: 2px;
     margin-bottom: 4px;
     transition: color 0.3s ease;
 }
@@ -186,6 +228,7 @@ button:active {
     text-decoration: underline;
 }
 
+/* Validation Highlights & Messages */
 input.valid {
     border-color: #2A9D8F !important;
     background: #F0FDF4;
@@ -197,9 +240,15 @@ input.invalid {
 }
 
 .match-message {
-    font-size: 0.85rem;
-    font-weight: 700;
-    height: 18px; 
+    font-size: 0.78rem;
+    font-weight: 600;
+    width: 82%;
+    text-align: center;
+    min-height: 20px;
+    height: auto;
+    line-height: 1.2;
+    margin: -2px 0 2px 0;
+    transition: all 0.3s ease;
 }
 
 .match-message.success {
