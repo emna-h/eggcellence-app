@@ -139,8 +139,8 @@
             <div id="page-add-inspection" class="page-view hidden">
                 <section class="form-card">
                     <div class="card-header">
-                        <h2>Log Egg Quality Sample</h2>
-                        <p>Enter physical laboratory measurement metrics.</p>
+                        <h2 id="formTitle">Log Egg Quality Sample</h2>
+                        <p id="formSubtitle">Enter physical laboratory measurement metrics.</p>
                     </div>
 
                     <form id="inspectionForm">
@@ -194,7 +194,10 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="submit-btn" id="submitBtn">Submit Quality Sample</button>
+                        <div class="form-actions">
+                            <button type="submit" class="submit-btn" id="submitBtn">Submit Quality Sample</button>
+                            <button type="button" class="cancel-edit-btn hidden" id="cancelEditBtn">Cancel Edit</button>
+                        </div>
                     </form>
                 </section>
             </div>
@@ -204,11 +207,10 @@
                 <section class="table-card">
                     <div class="card-header">
                         <h2> My Inspections History</h2>
-                        <p>Logs added by you. You can review or delete entries as needed.</p>
+                        <p>Logs added by you. You can review, edit, or delete entries as needed.</p>
                     </div>
 
                     <div class="table-responsive">
-                        <div class="table-responsive">
     <table id="logsTable">
         <thead>
             <tr>
@@ -227,7 +229,6 @@
         </tbody>
     </table>
 </div>
-                    </div>
                 </section>
             </div>
 
@@ -264,15 +265,19 @@
         const navItems = document.querySelectorAll('.nav-item');
         const pageViews = document.querySelectorAll('.page-view');
 
+        function goToPage(targetPage) {
+            navItems.forEach(i => i.classList.remove('active'));
+            pageViews.forEach(p => p.classList.add('hidden'));
+
+            const matchingNavItem = document.querySelector(`.nav-item[data-target="${targetPage}"]`);
+            if (matchingNavItem) matchingNavItem.classList.add('active');
+
+            document.getElementById(`page-${targetPage}`).classList.remove('hidden');
+        }
+
         navItems.forEach(btn => {
             btn.addEventListener('click', () => {
-                const targetPage = btn.getAttribute('data-target');
-
-                navItems.forEach(i => i.classList.remove('active'));
-                pageViews.forEach(p => p.classList.add('hidden'));
-
-                btn.classList.add('active');
-                document.getElementById(`page-${targetPage}`).classList.remove('hidden');
+                goToPage(btn.getAttribute('data-target'));
             });
         });
 
@@ -281,7 +286,13 @@
         const form = document.getElementById('inspectionForm');
         const logsTableBody = document.querySelector('#logsTable tbody');
         const submitBtn = document.getElementById('submitBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const formTitle = document.getElementById('formTitle');
+        const formSubtitle = document.getElementById('formSubtitle');
         const toastContainer = document.getElementById('toastContainer');
+
+        // Tracks which row is currently being edited. null = creating a new entry.
+        let editingRow = null;
 
         function getCurrentDateTime() {
             const now = new Date();
@@ -298,7 +309,7 @@
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast ${type === 'error' ? 'toast-error' : ''}`;
-            toast.innerHTML = `<span>${type === 'error' ? '❌' : '✓'}</span><span>${message}</span>`;
+            toast.innerHTML = `<span>${type === 'error' ? '' : '✓'}</span><span>${message}</span>`;
             toastContainer.appendChild(toast);
 
             setTimeout(() => toast.remove(), 3600);
@@ -310,6 +321,60 @@
             emptyRow.id = 'emptyState';
             emptyRow.innerHTML = `<td colspan="6" class="empty-state">No inspections logged yet. Submit your first sample to see it here.</td>`;
             logsTableBody.appendChild(emptyRow);
+        }
+
+        function getBadgeClass(classementVal) {
+            let badgeClass = 'badge-aa';
+            if (classementVal === 'A') badgeClass = 'badge-a';
+            if (classementVal === 'B') badgeClass = 'badge-b';
+            if (classementVal === 'C') badgeClass = 'badge-c';
+            return badgeClass;
+        }
+
+        function buildRowHTML(data) {
+            const badgeClass = getBadgeClass(data.classement);
+            return `
+                <td><strong>${data.datetime}</strong></td>
+                <td>${data.poids} g</td>
+                <td>${data.fraicheur} HU</td>
+                <td>${data.charge} N</td>
+                <td><span class="badge ${badgeClass}">Grade ${data.classement}</span></td>
+                <td>
+                    <button type="button" class="edit-btn">✏️ Edit</button>
+                    <button type="button" class="delete-btn">🗑️ Delete</button>
+                </td>
+            `;
+        }
+
+        function applyRowData(row, data) {
+            row.dataset.datetime = data.datetime;
+            row.dataset.poids = data.poids;
+            row.dataset.hauteur = data.hauteur;
+            row.dataset.coloration = data.coloration;
+            row.dataset.fraicheur = data.fraicheur;
+            row.dataset.classement = data.classement;
+            row.dataset.charge = data.charge;
+            row.innerHTML = buildRowHTML(data);
+        }
+
+        function resetToCreateMode() {
+            editingRow = null;
+            form.reset();
+            const updatedNow = getCurrentDateTime();
+            datetimeInput.value = updatedNow;
+            datetimeInput.max = updatedNow;
+
+            formTitle.textContent = 'Log Egg Quality Sample';
+            formSubtitle.textContent = 'Enter physical laboratory measurement metrics.';
+            submitBtn.textContent = 'Submit Quality Sample';
+            cancelEditBtn.classList.add('hidden');
+        }
+
+        if (cancelEditBtn) {
+            cancelEditBtn.addEventListener('click', function() {
+                resetToCreateMode();
+                showToast('Edit cancelled.', 'error');
+            });
         }
 
         if (form) {
@@ -324,38 +389,35 @@
 
                 submitBtn.disabled = true;
 
-                
-                const emptyRow = document.getElementById('emptyState');
-                if (emptyRow) emptyRow.remove();
+                const data = {
+                    datetime: datetimeInput.value.replace('T', ' '),
+                    poids: parseFloat(document.getElementById('poids').value).toFixed(2),
+                    hauteur: parseFloat(document.getElementById('hauteur').value).toFixed(2),
+                    coloration: parseFloat(document.getElementById('coloration').value).toFixed(2),
+                    fraicheur: parseFloat(document.getElementById('fraicheur').value).toFixed(2),
+                    classement: document.getElementById('classement').value,
+                    charge: parseFloat(document.getElementById('chargeRupture').value).toFixed(2)
+                };
 
-                const datetimeVal = datetimeInput.value.replace('T', ' ');
-                const poidsVal = parseFloat(document.getElementById('poids').value).toFixed(2);
-                const fraicheurVal = parseFloat(document.getElementById('fraicheur').value).toFixed(2);
-                const classementVal = document.getElementById('classement').value;
-                const chargeVal = parseFloat(document.getElementById('chargeRupture').value).toFixed(2);
+                if (editingRow) {
+                    applyRowData(editingRow, data);
+                    showToast('Sample record successfully updated!');
+                    resetToCreateMode();
+                } else {
+    
+                    const emptyRow = document.getElementById('emptyState');
+                    if (emptyRow) emptyRow.remove();
 
-                let badgeClass = 'badge-aa';
-                if (classementVal === 'A') badgeClass = 'badge-a';
-                if (classementVal === 'B') badgeClass = 'badge-b';
-                if (classementVal === 'C') badgeClass = 'badge-c';
+                    const newRow = document.createElement('tr');
+                    applyRowData(newRow, data);
+                    logsTableBody.insertBefore(newRow, logsTableBody.firstChild);
+                    showToast('Sample record successfully logged!');
 
-                const newRow = document.createElement('tr');
-                newRow.innerHTML = `
-                    <td><strong>${datetimeVal}</strong></td>
-                    <td>${poidsVal} g</td>
-                    <td>${fraicheurVal} HU</td>
-                    <td>${chargeVal} N</td>
-                    <td><span class="badge ${badgeClass}">Grade ${classementVal}</span></td>
-                    <td><button class="delete-btn">🗑️ Delete</button></td>
-                `;
-
-                logsTableBody.insertBefore(newRow, logsTableBody.firstChild);
-                showToast('Sample record successfully logged!');
-
-                form.reset();
-                const updatedNow = getCurrentDateTime();
-                datetimeInput.value = updatedNow;
-                datetimeInput.max = updatedNow;
+                    form.reset();
+                    const updatedNow = getCurrentDateTime();
+                    datetimeInput.value = updatedNow;
+                    datetimeInput.max = updatedNow;
+                }
 
                 submitBtn.disabled = false;
             });
@@ -364,15 +426,37 @@
 
         if (logsTableBody) {
             logsTableBody.addEventListener('click', function(e) {
+
                 if (e.target.classList.contains('delete-btn')) {
                     const row = e.target.closest('tr');
                     row.remove();
                     showToast('Inspection record deleted.', 'error');
 
-                    
                     if (logsTableBody.children.length === 0) {
                         showEmptyState();
                     }
+                    return;
+                }
+
+                if (e.target.classList.contains('edit-btn')) {
+                    const row = e.target.closest('tr');
+                    editingRow = row;
+
+                    const isoDatetime = row.dataset.datetime.replace(' ', 'T');
+                    datetimeInput.value = isoDatetime;
+                    document.getElementById('poids').value = row.dataset.poids;
+                    document.getElementById('hauteur').value = row.dataset.hauteur;
+                    document.getElementById('coloration').value = row.dataset.coloration;
+                    document.getElementById('fraicheur').value = row.dataset.fraicheur;
+                    document.getElementById('classement').value = row.dataset.classement;
+                    document.getElementById('chargeRupture').value = row.dataset.charge;
+
+                    formTitle.textContent = 'Edit Egg Quality Sample';
+                    formSubtitle.textContent = 'Update the measurements below and save your changes.';
+                    submitBtn.textContent = 'Update Sample';
+                    cancelEditBtn.classList.remove('hidden');
+
+                    goToPage('add-inspection');
                 }
             });
         }
