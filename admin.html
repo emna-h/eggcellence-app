@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Eggcellence</title>
+    
+    <!-- 🥚 Styling & Fonts -->
+    <link rel="icon" type="image/png" href="egg-icon.png">
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 📊 Chart.js CDN for Visual Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="logo-area">
+            <button class="sidebar-toggle-btn" id="sidebarToggle" title="Toggle Navigation">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                </svg>
+            </button>
+            <img src="egg-icon.png" alt="Eggcellence Logo" class="logo-img">
+            <span class="brand-name">Eggcellence</span>
+            <span class="role-tag admin-tag">System Admin</span>
+        </div>
+        <div class="user-profile">
+            <span class="admin-name">Welcome, Admin</span>
+            <a href="Login.html" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Layout -->
+    <div class="dashboard-layout">
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <img src="egg-icon.png" alt="Eggcellence Logo" class="sidebar-logo">
+                    <span>Admin Panel</span>
+                </div>
+                <button class="sidebar-close-btn" id="sidebarCloseBtn" title="Collapse Navigation">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="sidebar-scroll-content">
+                <nav class="sidebar-menu">
+                    <button class="nav-item active" data-target="overview">
+                        <span class="nav-label">Overview</span>
+                    </button>
+                    <button class="nav-item" data-target="master-logs">
+                        <span class="nav-label">Master Logs</span>
+                    </button>
+                    <button class="nav-item" data-target="analytics">
+                        <span class="nav-label">Analytics & Trends</span>
+                    </button>
+                    <button class="nav-item" data-target="users">
+                        <span class="nav-label">Inspectors</span>
+                    </button>
+                    <button class="nav-item" data-target="settings">
+                        <span class="nav-label">Grading Settings</span>
+                    </button>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Dynamic Content Views -->
+        <main class="main-content">
+
+            <!-- PAGE 1: OVERVIEW DASHBOARD -->
+            <div id="page-overview" class="page-view active">
+                <div class="page-title">
+                    <h2>Facility Quality Overview</h2>
+                    <p>Real-time system statistics and aggregate inspection performance.</p>
+                </div>
+
+                <!-- KPI Cards Grid -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Total Samples</span>
+                        </div>
+                        <div class="kpi-value" id="kpiTotal">0</div>
+                        <span class="kpi-subtext">Logged in database</span>
+                    </div>
+
+                    <div class="kpi-card success">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Pass Rate (Grade AA/A)</span>
+                        </div>
+                        <div class="kpi-value" id="kpiPassRate">0%</div>
+                        <span class="kpi-subtext">Premium market quality</span>
+                    </div>
+
+                    <div class="kpi-card danger">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Reject Rate (Grade C)</span>
+                        </div>
+                        <div class="kpi-value" id="kpiRejectRate">0%</div>
+                        <span class="kpi-subtext">Requires attention</span>
+                    </div>
+
+                    <div class="kpi-card info">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Active Inspectors</span>
+                        </div>
+                        <div class="kpi-value" id="kpiInspectors">0</div>
+                        <span class="kpi-subtext">Logging active data</span>
+                    </div>
+                </div>
+
+                <!-- Overview Charts Row -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <h3>Grade Distribution Breakdown</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="overviewGradeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <h3>Average Freshness (Haugh Unit)</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="overviewHuChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 2: MASTER INSPECTION LOGS -->
+            <div id="page-master-logs" class="page-view hidden">
+                <section class="table-card">
+                    <div class="card-header space-between">
+                        <div>
+                            <h2>Master Quality Inspection Logs</h2>
+                            <p>Global audit trail for all facility quality inspectors.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-success" id="addInspectionBtn">+ Add Inspection</button>
+                            <button class="btn btn-primary" id="exportCsvBtn">📥 Export CSV</button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Controls -->
+                    <div class="filter-bar">
+                        <input type="text" id="searchInput" placeholder="Search date or metrics..." class="filter-input">
+                        <select id="gradeFilter" class="filter-input">
+                            <option value="ALL">All Grades</option>
+                            <option value="AA">Grade AA</option>
+                            <option value="A">Grade A</option>
+                            <option value="B">Grade B</option>
+                            <option value="C">Grade C</option>
+                        </select>
+                        <select id="inspectorFilter" class="filter-input">
+                            <option value="ALL">All Inspectors</option>
+                        </select>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="masterLogsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Inspector</th>
+                                    <th>Poids (g)</th>
+                                    <th>Hauteur (mm)</th>
+                                    <th>Coloration</th>
+                                    <th>Fraîcheur (HU)</th>
+                                    <th>Rupture (N)</th>
+                                    <th>Grade</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dynamic JS Population -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- PAGE 3: DETAILED ANALYTICS -->
+            <div id="page-analytics" class="page-view hidden">
+                <div class="page-title">
+                    <h2>Advanced Analytics & Shell Metrics</h2>
+                    <p>Correlate shell thickness, Haugh units, and grade stability trends.</p>
+                </div>
+
+                <div class="charts-grid single-column">
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <h3>Shell Strength (Charge de rupture) vs. Weight Scatter Trend</h3>
+                        </div>
+                        <div class="chart-wrapper large">
+                            <canvas id="scatterAnalyticsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 4: USER MANAGEMENT -->
+            <div id="page-users" class="page-view hidden">
+                <section class="table-card">
+                    <div class="card-header space-between">
+                        <div>
+                            <h2>Quality Inspector Management</h2>
+                            <p>Control staff access permissions and view activity metrics.</p>
+                        </div>
+                        <button class="btn btn-success" id="addInspectorBtn">+ Add New Inspector</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Inspector Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Samples Logged</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Dynamic JS Population -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- PAGE 5: SYSTEM SETTINGS & THRESHOLDS -->
+            <div id="page-settings" class="page-view hidden">
+                <section class="form-card">
+                    <div class="card-header">
+                        <h2>Grading Standard Configuration</h2>
+                        <p>Adjust system-wide quality thresholds and alert rules.</p>
+                    </div>
+
+                    <form id="settingsForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cutoffAA">Grade AA Cutoff (HU)</label>
+                                <input type="number" id="cutoffAA" value="72" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cutoffA">Grade A Cutoff (HU)</label>
+                                <input type="number" id="cutoffA" value="60" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cutoffB">Grade B Cutoff (HU)</label>
+                                <input type="number" id="cutoffB" value="31" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="minStrength">Min. Required Shell Strength (N)</label>
+                                <input type="number" id="minStrength" value="25.00" step="0.5" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Save Threshold Configuration</button>
+                    </form>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- MODAL 1: Add Inspector Modal -->
+    <div class="modal-overlay hidden" id="addInspectorModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Add New Inspector</h3>
+                <button class="modal-close-btn" id="closeModalBtn">&times;</button>
+            </div>
+
+            <form id="addInspectorForm">
+                <div class="form-group">
+                    <label for="newInspectorName">Full Name</label>
+                    <input type="text" id="newInspectorName" placeholder="e.g. Amira Toumi" required>
+                </div>
+                <div class="form-group">
+                    <label for="newInspectorEmail">Email</label>
+                    <input type="email" id="newInspectorEmail" placeholder="e.g. amira.t@eggcellence.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="newInspectorRole">Role</label>
+                    <select id="newInspectorRole" required>
+                        <option value="Quality Inspector">Quality Inspector</option>
+                        <option value="Lead Inspector">Lead Inspector</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-cancel" id="cancelModalBtn">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Inspector</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Add / Edit Inspection Entry Modal -->
+    <div class="modal-overlay hidden" id="addInspectionModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="inspectionModalTitle">Log New Egg Inspection</h3>
+                <button class="modal-close-btn" id="closeInspectionModalBtn">&times;</button>
+            </div>
+
+            <form id="addInspectionForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newLogDatetime">Date et heure *</label>
+                        <input type="datetime-local" id="newLogDatetime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newLogInspector">Inspector Name *</label>
+                        <select id="newLogInspector" required></select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newLogPoids">Poids (g) [20 - 90] *</label>
+                        <input type="number" id="newLogPoids" min="20" max="90" step="0.01" placeholder="20.00 to 90.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newLogHauteur">Hauteur (mm) [2 - 12] *</label>
+                        <input type="number" id="newLogHauteur" min="2" max="12" step="0.01" placeholder="2.00 to 12.00" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newLogColoration">Coloration [7 - 17] *</label>
+                        <input type="number" id="newLogColoration" min="7" max="17" step="0.01" placeholder="7.00 to 17.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newLogFraicheur">Fraîcheur (HU) [20 - 110] *</label>
+                        <input type="number" id="newLogFraicheur" min="20" max="110" step="0.01" placeholder="20.00 to 110.00" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newLogCharge">Charge de rupture (N) [10 - 70] *</label>
+                        <input type="number" id="newLogCharge" min="10" max="70" step="0.01" placeholder="10.00 to 70.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newLogClasse">Classement *</label>
+                        <select id="newLogClasse" required>
+                            <option value="AA">Grade AA</option>
+                            <option value="A">Grade A</option>
+                            <option value="B">Grade B</option>
+                            <option value="C">Grade C</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-cancel" id="cancelInspectionModalBtn">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="saveInspectionSubmitBtn">Save Inspection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let editingLogIndex = null;
+
+            // --- 1. Sidebar Control ---
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+            const sidebar = document.getElementById('sidebar');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('collapsed');
+            }
+
+            if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+            if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', toggleSidebar);
+
+            // --- 2. Page Navigation Switcher ---
+            const navItems = document.querySelectorAll('.nav-item');
+            const pageViews = document.querySelectorAll('.page-view');
+
+            function switchPage(targetPage) {
+                navItems.forEach(i => i.classList.remove('active'));
+                pageViews.forEach(p => p.classList.add('hidden'));
+
+                const activeBtn = document.querySelector(`.nav-item[data-target="${targetPage}"]`);
+                const activePage = document.getElementById(`page-${targetPage}`);
+
+                if (activeBtn) activeBtn.classList.add('active');
+                if (activePage) activePage.classList.remove('hidden');
+
+                if (targetPage === 'overview' || targetPage === 'analytics') {
+                    renderCharts();
+                }
+            }
+
+            navItems.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    switchPage(btn.getAttribute('data-target'));
+                });
+            });
+
+            // --- 3. Storage & Data Handlers ---
+            function getLogsData() {
+                const stored = localStorage.getItem('eggcellence_logs');
+                if (stored) return JSON.parse(stored);
+                
+                const defaultLogs = [
+                    { datetime: '2026-08-07 12:15', inspector: 'Rayen Mahmoudi', poids: '58.20', hauteur: '4.80', coloration: '10.50', fraicheur: '65.10', charge: '38.00', classe: 'A' },
+                    { datetime: '2026-08-06 16:40', inspector: 'Anas Graja', poids: '61.10', hauteur: '3.90', coloration: '8.20', fraicheur: '55.00', charge: '31.50', classe: 'B' },
+                    { datetime: '2026-08-06 09:05', inspector: 'Jihen Ben Hdid', poids: '54.30', hauteur: '2.50', coloration: '7.10', fraicheur: '28.40', charge: '18.20', classe: 'C' },
+                    { datetime: '2026-08-05 11:20', inspector: 'Rayen Mahmoudi', poids: '65.00', hauteur: '6.10', coloration: '14.00', fraicheur: '82.10', charge: '48.90', classe: 'AA' }
+                ];
+                localStorage.setItem('eggcellence_logs', JSON.stringify(defaultLogs));
+                return defaultLogs;
+            }
+
+            function getUsersData() {
+                const stored = localStorage.getItem('eggcellence_users');
+                let users = stored ? JSON.parse(stored) : null;
+
+                const defaultAdmin = { name: 'Admin (You)', email: 'admin@eggcellence.com', role: 'System Admin', status: 'Active', samples: 1, isSelf: true };
+
+                if (!users) {
+                    users = [
+                        defaultAdmin,
+                        { name: 'Jihen Ben Hdid ', email: 'J.Ben.Hdid@eggcellence.com', role: 'Quality Inspector', status: 'Active', samples: 142 },
+                        { name: 'Rayen Mahmoudi', email: 'R.Mahmoudi@eggcellence.com', role: 'Quality Inspector', status: 'Active', samples: 98 },
+                        { name: 'Anas Graja', email: 'A.Graja@eggcellence.com', role: 'Lead Inspector', status: 'Active', samples: 310 }
+                    ];
+                    localStorage.setItem('eggcellence_users', JSON.stringify(users));
+                } else {
+                    const adminExists = users.some(u => u.name === 'Admin (You)' || u.role === 'System Admin');
+                    if (!adminExists) {
+                        users.unshift(defaultAdmin);
+                        localStorage.setItem('eggcellence_users', JSON.stringify(users));
+                    }
+                }
+                return users;
+            }
+
+            function showToast(message, type = 'success') {
+                const toastContainer = document.getElementById('toastContainer');
+                if (!toastContainer) return;
+                const toast = document.createElement('div');
+                toast.className = `toast ${type === 'error' ? 'toast-error' : ''}`;
+                toast.innerHTML = `<span>${type === 'error' ? '' : '✓'}</span><span>${message}</span>`;
+                toastContainer.appendChild(toast);
+                setTimeout(() => toast.remove(), 3600);
+            }
+
+            // --- 4. Dynamic Inspector Selection Dropdowns ---
+            const inspectorFilter = document.getElementById('inspectorFilter');
+            const newLogInspector = document.getElementById('newLogInspector');
+
+            function populateInspectorDropdowns() {
+                const users = getUsersData();
+                
+                if (inspectorFilter) {
+                    const currentFilterVal = inspectorFilter.value;
+                    inspectorFilter.innerHTML = '<option value="ALL">All Inspectors</option>';
+                    users.forEach(u => {
+                        const opt = document.createElement('option');
+                        opt.value = u.name;
+                        opt.textContent = `${u.name} ${u.status === 'Deactivated' ? '(Deactivated)' : ''}`;
+                        inspectorFilter.appendChild(opt);
+                    });
+                    inspectorFilter.value = currentFilterVal || 'ALL';
+                }
+
+                if (newLogInspector) {
+                    const currentVal = newLogInspector.value;
+                    newLogInspector.innerHTML = '';
+                    
+                    users.forEach(u => {
+                        if (u.status === 'Active' || (editingLogIndex !== null && u.name === currentVal)) {
+                            const opt = document.createElement('option');
+                            opt.value = u.name;
+                            opt.textContent = u.name + (u.status === 'Deactivated' ? ' (Deactivated)' : '');
+                            newLogInspector.appendChild(opt);
+                        }
+                    });
+                }
+            }
+
+            // Get Current Local Datetime String YYYY-MM-DDTHH:mm
+            function getCurrentLocalDateTime() {
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                return now.toISOString().slice(0, 16);
+            }
+
+            // --- 5. Master Table & KPI Rendering ---
+            const masterLogsTableBody = document.querySelector('#masterLogsTable tbody');
+            const searchInput = document.getElementById('searchInput');
+            const gradeFilter = document.getElementById('gradeFilter');
+
+            function renderMasterLogs() {
+                const logs = getLogsData();
+                if (!masterLogsTableBody) return;
+
+                const searchVal = searchInput ? searchInput.value.toLowerCase() : '';
+                const selectedGrade = gradeFilter ? gradeFilter.value : 'ALL';
+                const selectedInspector = inspectorFilter ? inspectorFilter.value : 'ALL';
+
+                masterLogsTableBody.innerHTML = '';
+
+                let totalCount = logs.length;
+                let passCount = 0;
+                let rejectCount = 0;
+
+                logs.forEach((log, index) => {
+                    const inspectorName = log.inspector || 'Admin (You)';
+                    
+                    if (log.classe === 'AA' || log.classe === 'A') passCount++;
+                    if (log.classe === 'C') rejectCount++;
+
+                    const matchesSearch = log.datetime.toLowerCase().includes(searchVal) || 
+                                          inspectorName.toLowerCase().includes(searchVal) ||
+                                          log.classe.toLowerCase().includes(searchVal);
+                    const matchesGrade = selectedGrade === 'ALL' || log.classe === selectedGrade;
+                    const matchesInspector = selectedInspector === 'ALL' || inspectorName === selectedInspector;
+
+                    if (matchesSearch && matchesGrade && matchesInspector) {
+                        let badgeClass = 'badge-aa';
+                        if (log.classe === 'A') badgeClass = 'badge-a';
+                        if (log.classe === 'B') badgeClass = 'badge-b';
+                        if (log.classe === 'C') badgeClass = 'badge-c';
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${log.datetime}</strong></td>
+                            <td>${inspectorName}</td>
+                            <td>${log.poids} g</td>
+                            <td>${log.hauteur || 'N/A'} mm</td>
+                            <td>${log.coloration || 'N/A'}</td>
+                            <td>${log.fraicheur} HU</td>
+                            <td>${log.charge} N</td>
+                            <td><span class="badge ${badgeClass}">Grade ${log.classe}</span></td>
+                            <td>
+                                <button class="edit-btn" data-index="${index}" style="margin-right: 5px;">Edit</button>
+                                <button class="delete-btn" data-index="${index}">Delete</button>
+                            </td>
+                        `;
+                        masterLogsTableBody.appendChild(tr);
+                    }
+                });
+
+                // Update KPIs
+                const users = getUsersData();
+                const activeCount = users.filter(u => u.status === 'Active').length;
+
+                document.getElementById('kpiTotal').textContent = totalCount;
+                document.getElementById('kpiPassRate').textContent = totalCount ? `${((passCount / totalCount) * 100).toFixed(1)}%` : '0%';
+                document.getElementById('kpiRejectRate').textContent = totalCount ? `${((rejectCount / totalCount) * 100).toFixed(1)}%` : '0%';
+                document.getElementById('kpiInspectors').textContent = activeCount;
+            }
+
+            if (searchInput) searchInput.addEventListener('input', renderMasterLogs);
+            if (gradeFilter) gradeFilter.addEventListener('change', renderMasterLogs);
+            if (inspectorFilter) inspectorFilter.addEventListener('change', renderMasterLogs);
+
+            if (masterLogsTableBody) {
+                masterLogsTableBody.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('delete-btn')) {
+                        const index = parseInt(e.target.getAttribute('data-index'), 10);
+                        let logs = getLogsData();
+                        logs.splice(index, 1);
+                        localStorage.setItem('eggcellence_logs', JSON.stringify(logs));
+                        renderMasterLogs();
+                        renderCharts();
+                        showToast('Inspection record purged from master database.', 'error');
+                    } else if (e.target.classList.contains('edit-btn')) {
+                        const index = parseInt(e.target.getAttribute('data-index'), 10);
+                        openEditInspectionModal(index);
+                    }
+                });
+            }
+
+            // --- 6. Add & Edit Inspection Modal Handlers & Validation ---
+            const addInspectionBtn = document.getElementById('addInspectionBtn');
+            const addInspectionModal = document.getElementById('addInspectionModal');
+            const closeInspectionModalBtn = document.getElementById('closeInspectionModalBtn');
+            const cancelInspectionModalBtn = document.getElementById('cancelInspectionModalBtn');
+            const addInspectionForm = document.getElementById('addInspectionForm');
+            const inspectionModalTitle = document.getElementById('inspectionModalTitle');
+            const saveInspectionSubmitBtn = document.getElementById('saveInspectionSubmitBtn');
+            const dateInput = document.getElementById('newLogDatetime');
+
+            function openAddInspectionModal() {
+                editingLogIndex = null;
+                if (addInspectionModal) {
+                    if (addInspectionForm) addInspectionForm.reset();
+                    if (inspectionModalTitle) inspectionModalTitle.textContent = 'Log New Egg Inspection';
+                    if (saveInspectionSubmitBtn) saveInspectionSubmitBtn.textContent = 'Save Inspection';
+
+                    populateInspectorDropdowns();
+
+                    const nowStr = getCurrentLocalDateTime();
+                    dateInput.max = nowStr;
+                    dateInput.value = nowStr;
+
+                    addInspectionModal.classList.remove('hidden');
+                }
+            }
+
+            function openEditInspectionModal(index) {
+                editingLogIndex = index;
+                const logs = getLogsData();
+                const log = logs[index];
+
+                if (log && addInspectionModal) {
+                    populateInspectorDropdowns();
+
+                    if (inspectionModalTitle) inspectionModalTitle.textContent = 'Edit Inspection Record';
+                    if (saveInspectionSubmitBtn) saveInspectionSubmitBtn.textContent = 'Update Inspection';
+
+                    const nowStr = getCurrentLocalDateTime();
+                    dateInput.max = nowStr;
+
+                    document.getElementById('newLogDatetime').value = log.datetime.replace(' ', 'T');
+                    document.getElementById('newLogInspector').value = log.inspector || 'Admin (You)';
+                    document.getElementById('newLogPoids').value = log.poids || '';
+                    document.getElementById('newLogHauteur').value = log.hauteur || '';
+                    document.getElementById('newLogColoration').value = log.coloration || '';
+                    document.getElementById('newLogFraicheur').value = log.fraicheur || '';
+                    document.getElementById('newLogCharge').value = log.charge || '';
+                    document.getElementById('newLogClasse').value = log.classe || 'AA';
+
+                    addInspectionModal.classList.remove('hidden');
+                }
+            }
+
+            function closeInspectionModal() {
+                editingLogIndex = null;
+                if (addInspectionModal) addInspectionModal.classList.add('hidden');
+                if (addInspectionForm) addInspectionForm.reset();
+            }
+
+            if (addInspectionBtn) addInspectionBtn.addEventListener('click', openAddInspectionModal);
+            if (closeInspectionModalBtn) closeInspectionModalBtn.addEventListener('click', closeInspectionModal);
+            if (cancelInspectionModalBtn) cancelInspectionModalBtn.addEventListener('click', closeInspectionModal);
+
+            if (addInspectionModal) {
+                addInspectionModal.addEventListener('click', function(e) {
+                    if (e.target === addInspectionModal) closeInspectionModal();
+                });
+            }
+
+            if (addInspectionForm) {
+                addInspectionForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const dtRaw = document.getElementById('newLogDatetime').value;
+                    const inputDate = new Date(dtRaw);
+                    const now = new Date();
+
+                    if (!dtRaw || inputDate > now) {
+                        showToast('Date et heure cannot be empty or in the future.', 'error');
+                        return;
+                    }
+
+                    const poids = parseFloat(document.getElementById('newLogPoids').value);
+                    if (isNaN(poids) || poids < 20 || poids > 90) {
+                        showToast('Poids must be between 20.00g and 90.00g.', 'error');
+                        return;
+                    }
+
+                    const hauteur = parseFloat(document.getElementById('newLogHauteur').value);
+                    if (isNaN(hauteur) || hauteur < 2 || hauteur > 12) {
+                        showToast('Hauteur must be between 2.00mm and 12.00mm.', 'error');
+                        return;
+                    }
+
+                    const coloration = parseFloat(document.getElementById('newLogColoration').value);
+                    if (isNaN(coloration) || coloration < 7 || coloration > 17) {
+                        showToast('Coloration must be between 7.00 and 17.00.', 'error');
+                        return;
+                    }
+
+                    const fraicheur = parseFloat(document.getElementById('newLogFraicheur').value);
+                    if (isNaN(fraicheur) || fraicheur < 20 || fraicheur > 110) {
+                        showToast('Fraîcheur must be between 20.00 and 110.00 HU.', 'error');
+                        return;
+                    }
+
+                    const charge = parseFloat(document.getElementById('newLogCharge').value);
+                    if (isNaN(charge) || charge < 10 || charge > 70) {
+                        showToast('Charge de rupture must be between 10.00N and 70.00N.', 'error');
+                        return;
+                    }
+
+                    const classe = document.getElementById('newLogClasse').value;
+                    if (!['AA', 'A', 'B', 'C'].includes(classe)) {
+                        showToast('Invalid Grade selected.', 'error');
+                        return;
+                    }
+
+                    const selectedInspector = document.getElementById('newLogInspector').value;
+                    const formattedDt = dtRaw.replace('T', ' ');
+
+                    const updatedEntry = {
+                        datetime: formattedDt,
+                        inspector: selectedInspector,
+                        poids: poids.toFixed(2),
+                        hauteur: hauteur.toFixed(2),
+                        coloration: coloration.toFixed(2),
+                        fraicheur: fraicheur.toFixed(2),
+                        charge: charge.toFixed(2),
+                        classe: classe
+                    };
+
+                    let logs = getLogsData();
+
+                    if (editingLogIndex !== null) {
+                        logs[editingLogIndex] = updatedEntry;
+                        localStorage.setItem('eggcellence_logs', JSON.stringify(logs));
+                        showToast('Inspection record updated successfully.');
+                    } else {
+                        logs.unshift(updatedEntry);
+                        localStorage.setItem('eggcellence_logs', JSON.stringify(logs));
+
+                        let users = getUsersData();
+                        const targetUser = users.find(u => u.name === selectedInspector);
+                        if (targetUser) {
+                            targetUser.samples = (targetUser.samples || 0) + 1;
+                            localStorage.setItem('eggcellence_users', JSON.stringify(users));
+                            renderUsersTable();
+                        }
+                        showToast(`New inspection entry logged for ${selectedInspector}.`);
+                    }
+
+                    renderMasterLogs();
+                    renderCharts();
+                    closeInspectionModal();
+                });
+            }
+
+            // --- 7. Export CSV ---
+            const exportCsvBtn = document.getElementById('exportCsvBtn');
+            if (exportCsvBtn) {
+                exportCsvBtn.addEventListener('click', function() {
+                    const logs = getLogsData();
+                    if (!logs.length) {
+                        showToast('No log entries available to export.', 'error');
+                        return;
+                    }
+
+                    let csvContent = "data:text/csv;charset=utf-8,Date,Inspector,Poids(g),Hauteur(mm),Coloration,Fraicheur(HU),Charge(N),Grade\n";
+                    logs.forEach(l => {
+                        csvContent += `${l.datetime},${l.inspector || 'Admin (You)'},${l.poids},${l.hauteur || ''},${l.coloration || ''},${l.fraicheur},${l.charge},${l.classe}\n`;
+                    });
+
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `Eggcellence_Inspection_Logs_${new Date().toISOString().slice(0,10)}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    showToast('CSV Export generated successfully!');
+                });
+            }
+
+            // --- 8. User Management (With Activate/Deactivate & Delete Actions) ---
+            const usersTableBody = document.getElementById('usersTableBody');
+            const addInspectorBtn = document.getElementById('addInspectorBtn');
+            const addInspectorModal = document.getElementById('addInspectorModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const cancelModalBtn = document.getElementById('cancelModalBtn');
+            const addInspectorForm = document.getElementById('addInspectorForm');
+
+            function renderUsersTable() {
+                const users = getUsersData();
+                if (!usersTableBody) return;
+
+                usersTableBody.innerHTML = '';
+
+                users.forEach((user, index) => {
+                    const isActive = user.status === 'Active';
+                    const isSelfAdmin = user.name === 'Admin (You)' || user.role === 'System Admin' || user.isSelf;
+                    
+                    let badgeClass = isActive ? 'badge-aa' : 'badge-c';
+                    let statusLabel = user.status;
+                    let actionCellHtml = '';
+
+                    if (isSelfAdmin) {
+                        statusLabel = 'Active (Current Session)';
+                        badgeClass = 'badge-a';
+                        
+                        actionCellHtml = `<a href="Login.html" class="btn btn-cancel" style="display:inline-flex; align-items:center; gap:4px; text-decoration:none;">Log Out</a>`;
+                    } else {
+                        const toggleBtn = isActive 
+                            ? `<button class="btn btn-cancel toggle-status-btn" data-index="${index}" data-action="deactivate">Deactivate</button>` 
+                            : `<button class="btn btn-success toggle-status-btn" data-index="${index}" data-action="activate">Activate</button>`;
+                        
+                        const deleteBtn = `<button class="delete-btn delete-user-btn" data-index="${index}" style="margin-left: 5px;">Delete</button>`;
+
+                        actionCellHtml = `${toggleBtn} ${deleteBtn}`;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${user.name}</strong></td>
+                        <td>${user.email}</td>
+                        <td>${user.role}</td>
+                        <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
+                        <td>${user.samples}</td>
+                        <td>${actionCellHtml}</td>
+                    `;
+                    usersTableBody.appendChild(tr);
+                });
+
+                populateInspectorDropdowns();
+            }
+
+            if (usersTableBody) {
+                usersTableBody.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('toggle-status-btn')) {
+                        const index = parseInt(e.target.getAttribute('data-index'), 10);
+                        let users = getUsersData();
+                        
+                        const currentStatus = users[index].status;
+                        const newStatus = currentStatus === 'Active' ? 'Deactivated' : 'Active';
+                        users[index].status = newStatus;
+                        
+                        localStorage.setItem('eggcellence_users', JSON.stringify(users));
+                        renderUsersTable();
+                        renderMasterLogs();
+
+                        if (newStatus === 'Active') {
+                            showToast(`Inspector ${users[index].name} is now Active.`);
+                        } else {
+                            showToast(`Inspector ${users[index].name} has been Deactivated.`, 'error');
+                        }
+                    } else if (e.target.classList.contains('delete-user-btn')) {
+                        const index = parseInt(e.target.getAttribute('data-index'), 10);
+                        let users = getUsersData();
+                        const removedName = users[index].name;
+
+                        users.splice(index, 1);
+                        localStorage.setItem('eggcellence_users', JSON.stringify(users));
+
+                        renderUsersTable();
+                        renderMasterLogs();
+                        showToast(`Inspector "${removedName}" has been removed from system.`, 'error');
+                    }
+                });
+            }
+
+            function openModal() { if (addInspectorModal) addInspectorModal.classList.remove('hidden'); }
+            function closeModal() {
+                if (addInspectorModal) addInspectorModal.classList.add('hidden');
+                if (addInspectorForm) addInspectorForm.reset();
+            }
+
+            if (addInspectorBtn) addInspectorBtn.addEventListener('click', openModal);
+            if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+            if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
+
+            if (addInspectorModal) {
+                addInspectorModal.addEventListener('click', function(e) {
+                    if (e.target === addInspectorModal) closeModal();
+                });
+            }
+
+            if (addInspectorForm) {
+                addInspectorForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const newUser = {
+                        name: document.getElementById('newInspectorName').value,
+                        email: document.getElementById('newInspectorEmail').value,
+                        role: document.getElementById('newInspectorRole').value,
+                        status: 'Active',
+                        samples: 0
+                    };
+
+                    const users = getUsersData();
+                    users.push(newUser);
+                    localStorage.setItem('eggcellence_users', JSON.stringify(users));
+
+                    renderUsersTable();
+                    closeModal();
+                    showToast(`${newUser.name} added as a new inspector.`);
+                });
+            }
+
+            // --- 9. Chart Visualizations ---
+            let gradeChartInstance = null;
+            let huChartInstance = null;
+            let scatterChartInstance = null;
+
+            function renderCharts() {
+                const logs = getLogsData();
+
+                const counts = { AA: 0, A: 0, B: 0, C: 0 };
+                logs.forEach(l => {
+                    if (counts[l.classe] !== undefined) counts[l.classe]++;
+                });
+
+                const ctxGrade = document.getElementById('overviewGradeChart');
+                if (ctxGrade) {
+                    if (gradeChartInstance) gradeChartInstance.destroy();
+                    gradeChartInstance = new Chart(ctxGrade, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Grade AA', 'Grade A', 'Grade B', 'Grade C'],
+                            datasets: [{
+                                data: [counts.AA, counts.A, counts.B, counts.C],
+                                backgroundColor: ['#2A9D8F', '#4EA8DE', '#F4A261', '#E63946']
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                }
+
+                const ctxHu = document.getElementById('overviewHuChart');
+                if (ctxHu) {
+                    if (huChartInstance) huChartInstance.destroy();
+                    huChartInstance = new Chart(ctxHu, {
+                        type: 'line',
+                        data: {
+                            labels: logs.map(l => l.datetime.slice(5, 16)).reverse(),
+                            datasets: [{
+                                label: 'Haugh Unit (Freshness)',
+                                data: logs.map(l => parseFloat(l.fraicheur)).reverse(),
+                                borderColor: '#2A9D8F',
+                                backgroundColor: 'rgba(42, 157, 143, 0.1)',
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                }
+
+                const ctxScatter = document.getElementById('scatterAnalyticsChart');
+                if (ctxScatter) {
+                    if (scatterChartInstance) scatterChartInstance.destroy();
+                    scatterChartInstance = new Chart(ctxScatter, {
+                        type: 'scatter',
+                        data: {
+                            datasets: [{
+                                label: 'Sample Rupture Force vs. Weight',
+                                data: logs.map(l => ({ x: parseFloat(l.poids), y: parseFloat(l.charge) })),
+                                backgroundColor: '#E63946'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { title: { display: true, text: 'Weight (grams)' } },
+                                y: { title: { display: true, text: 'Shell Strength (Newtons)' } }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // --- 10. Settings Form Persistence ---
+            const settingsForm = document.getElementById('settingsForm');
+            function loadSettings() {
+                const settings = JSON.parse(localStorage.getItem('eggcellence_settings')) || {
+                    cutoffAA: 72, cutoffA: 60, cutoffB: 31, minStrength: 25.0
+                };
+                if (document.getElementById('cutoffAA')) document.getElementById('cutoffAA').value = settings.cutoffAA;
+                if (document.getElementById('cutoffA')) document.getElementById('cutoffA').value = settings.cutoffA;
+                if (document.getElementById('cutoffB')) document.getElementById('cutoffB').value = settings.cutoffB;
+                if (document.getElementById('minStrength')) document.getElementById('minStrength').value = settings.minStrength;
+            }
+
+            if (settingsForm) {
+                settingsForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const settings = {
+                        cutoffAA: document.getElementById('cutoffAA').value,
+                        cutoffA: document.getElementById('cutoffA').value,
+                        cutoffB: document.getElementById('cutoffB').value,
+                        minStrength: document.getElementById('minStrength').value
+                    };
+                    localStorage.setItem('eggcellence_settings', JSON.stringify(settings));
+                    showToast('Quality parameters updated across facility system.');
+                });
+            }
+
+            // Initial Execution
+            loadSettings();
+            renderUsersTable();
+            renderMasterLogs();
+            renderCharts();
+        });
+    </script>
+</body>
+</html>
