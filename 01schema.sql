@@ -5,7 +5,9 @@ GO
 USE EggcellenceDB;
 GO
 
-
+-- ---------------------------------------------------------------------
+-- Drop in reverse dependency order
+-- ---------------------------------------------------------------------
 DROP VIEW  IF EXISTS vw_inspection_report;
 DROP TABLE IF EXISTS stg_inspections;
 DROP TABLE IF EXISTS inspections;
@@ -18,8 +20,7 @@ GO
 -- ---------------------------------------------------------------------
 -- users
 -- added job_title — admin.html's "Add Inspector" modal has its
--- own Role dropdown ('Quality Inspector' / 'Lead Inspector'), which is
--- a DIFFERENT axis from the Admin/User auth role used at signup.
+-- own Role dropdown ('Quality Inspector' / 'Lead Inspector').
 -- ---------------------------------------------------------------------
 CREATE TABLE users (
     user_id         INT IDENTITY(1,1) PRIMARY KEY,
@@ -37,11 +38,6 @@ GO
 
 -- ---------------------------------------------------------------------
 -- access_keys  — NEW TABLE
--- VerifyRole.html asks for an Admin/User access key, but nothing
--- in the first schema stored a real one — the app was going to be stuck
--- checking hardcoded '1111'/'2222' in Python forever. This table lets
--- the key live in the database, hashed, and be rotated without
--- touching code.
 -- ---------------------------------------------------------------------
 CREATE TABLE access_keys (
     key_id      INT IDENTITY(1,1) PRIMARY KEY,
@@ -70,7 +66,6 @@ GO
 
 -- ---------------------------------------------------------------------
 -- support_tickets
---  added status so an admin can eventually triage/close tickets
 -- ---------------------------------------------------------------------
 CREATE TABLE support_tickets (
     ticket_id       INT IDENTITY(1,1) PRIMARY KEY,
@@ -88,7 +83,7 @@ CREATE TABLE support_tickets (
 GO
 
 -- ---------------------------------------------------------------------
--- inspections — unchanged
+-- inspections — unchanged from your version, it was correct
 -- ---------------------------------------------------------------------
 CREATE TABLE inspections (
     inspection_id       INT IDENTITY(1,1) PRIMARY KEY,
@@ -106,7 +101,9 @@ CREATE TABLE inspections (
 GO
 
 -- ---------------------------------------------------------------------
--- stg_inspections 
+-- stg_inspections — your staging table, unchanged, it was correct and
+-- is exactly the right shape for an SSIS landing zone (see SSIS
+-- section in the report below for how it gets used).
 -- ---------------------------------------------------------------------
 CREATE TABLE stg_inspections (
     stg_id                INT IDENTITY(1,1) PRIMARY KEY,
@@ -125,7 +122,7 @@ CREATE TABLE stg_inspections (
 GO
 
 -- ---------------------------------------------------------------------
--- Indexes — unchanged 
+-- Indexes — unchanged from your version, they were correct
 -- ---------------------------------------------------------------------
 CREATE INDEX IX_inspections_user_id  ON inspections(user_id);
 CREATE INDEX IX_inspections_datetime ON inspections(inspection_datetime DESC);
@@ -133,7 +130,8 @@ CREATE INDEX IX_users_email          ON users(email);
 GO
 
 -- ---------------------------------------------------------------------
--- Reporting view —
+-- Reporting view — NEW. Power BI and the SSIS load step both read
+-- from this, not the raw tables.
 -- ---------------------------------------------------------------------
 CREATE OR ALTER VIEW vw_inspection_report AS
 SELECT
