@@ -1,0 +1,74 @@
+
+USE EggcellenceDB;
+GO
+
+CREATE OR ALTER PROCEDURE usp_ProcessStagingInspections
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Work only on rows not yet processed
+    DECLARE @stg_id INT, @raw_datetime VARCHAR(50), @raw_email VARCHAR(150),
+            @raw_poids VARCHAR(50), @raw_hauteur VARCHAR(50), @raw_coloration VARCHAR(50),
+            @raw_fraicheur VARCHAR(50), @raw_charge VARCHAR(50), @raw_classement VARCHAR(10);
+
+    DECLARE staging_cursor CURSOR FOR
+        SELECT stg_id, raw_datetime, raw_inspector_email, raw_poids, raw_hauteur,
+               raw_coloration, raw_fraicheur, raw_charge_rupture, raw_classement
+        FROM stg_inspections
+        WHERE is_processed = 0;
+
+    OPEN staging_cursor;
+    FETCH NEXT FROM staging_cursor INTO
+        @stg_id, @raw_datetime, @raw_email, @raw_poids, @raw_hauteur,
+        @raw_coloration, @raw_fraicheur, @raw_charge, @raw_classement;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        DECLARE @user_id INT, @error VARCHAR(MAX) = '';
+
+        SELECT @user_id = user_id FROM users WHERE email = @raw_email;
+
+        IF @user_id IS NULL
+            SET @error = @error + 'No matching user for email: ' + ISNULL(@raw_email, 'NULL') + '. ';
+
+        IF TRY_CONVERT(DATETIME2, @raw_datetime) IS NULL
+            SET @error = @error + 'Invalid datetime. ';
+        IF TRY_CONVERT(DECIMAL(5,2), @raw_poids) IS NULL OR TRY_CONVERT(DECIMAL(5,2), @raw_poids) NOT BETWEEN 20 AND 90
+            SET @error = @error + 'Invalid poids. ';
+        IF TRY_CONVERT(DECIMAL(4,2), @raw_hauteur) IS NULL OR TRY_CONVERT(DECIMAL(4,2), @raw_hauteur) NOT BETWEEN 2 AND 12
+            SET @error = @error + 'Invalid hauteur. ';
+        IF TRY_CONVERT(DECIMAL(4,2), @raw_coloration) IS NULL OR TRY_CONVERT(DECIMAL(4,2), @raw_coloration) NOT BETWEEN 7 AND 17
+            SET @error = @error + 'Invalid coloration. ';
+        IF TRY_CONVERT(DECIMAL(5,2), @raw_fraicheur) IS NULL OR TRY_CONVERT(DECIMAL(5,2), @raw_fraicheur) NOT BETWEEN 20 AND 110
+            SET @error = @error + 'Invalid fraicheur. ';
+        IF TRY_CONVERT(DECIMAL(4,2), @raw_charge) IS NULL OR TRY_CONVERT(DECIMAL(4,2), @raw_charge) NOT BETWEEN 10 AND 70
+            SET @error = @error + 'Invalid charge_rupture. ';
+        IF @raw_classement NOT IN ('AA','A','B','C')
+            SET @error = @error + 'Invalid classement. ';
+
+        IF @error = ''
+        BEGIN
+            INSERT INTO inspections
+                (user_id, inspection_datetime, poids, hauteur, coloration, fraicheur, classement, charge_rupture)
+            VALUES
+                (@user_id, TRY_CONVERT(DATETIME2, @raw_datetime), TRY_CONVERT(DECIMAL(5,2), @raw_poids),
+                 TRY_CONVERT(DECIMAL(4,2), @raw_hauteur), TRY_CONVERT(DECIMAL(4,2), @raw_coloration),
+                 TRY_CONVERT(DECIMAL(5,2), @raw_fraicheur), @raw_classement, TRY_CONVERT(DECIMAL(4,2), @raw_charge));
+
+            UPDATE stg_inspections SET is_processed = 1, error_log = NULL WHERE stg_id = @stg_id;
+        END
+        ELSE
+        BEGIN
+            UPDATE stg_inspections SET error_log = @error WHERE stg_id = @stg_id;
+        END
+
+        FETCH NEXT FROM staging_cursor INTO
+            @stg_id, @raw_datetime, @raw_email, @raw_poids, @raw_hauteur,
+            @raw_coloration, @raw_fraicheur, @raw_charge, @raw_classement;
+    END
+
+    CLOSE staging_cursor;
+    DEALLOCATE staging_cursor;
+END
+GO
