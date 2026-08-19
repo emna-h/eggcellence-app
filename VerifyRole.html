@@ -113,32 +113,62 @@
             }
         }
 
-        document.getElementById('verifyForm').addEventListener('submit', (e) => {
+        const API_BASE = 'http://127.0.0.1:5000';
+
+        // Guard: this page only makes sense mid-signup/login. If there's no
+        // active session, send the person back to Login.html instead of
+        // letting them submit a key with nothing to verify.
+        (async function checkSession() {
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include', cache: 'no-store' });
+                const data = await res.json();
+                if (!data.user) {
+                    window.location.href = 'Login.html';
+                    return;
+                }
+                // Pre-select the pill matching the account's actual role
+                // (an Admin account shouldn't be verifying as a User, or vice versa).
+                if (data.user.role === 'Admin') switchRole('Admin');
+            } catch (err) {
+                // backend unreachable — let them try anyway, submit will fail cleanly
+            }
+        })();
+
+        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            if (currentRole === 'Admin') {
-                if (adminSecretKey.value === "2222") {
-                    statusMessage.textContent = "✓ Master Admin Key verified! Redirecting...";
-                    statusMessage.className = "status-message success";
-                    setTimeout(() => {
-                        window.location.href = "admin.html";
-                    }, 1500);
-                } else {
-                    statusMessage.textContent = "✗ Invalid Master Admin Key ";
+            const key = currentRole === 'Admin' ? adminSecretKey.value : userAccessKey.value;
+            const verifyBtn = document.getElementById('verifyBtn');
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Verifying...';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ key })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    statusMessage.textContent = `✗ ${data.error || 'Invalid key'}`;
                     statusMessage.className = "status-message error";
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Verify & Access Dashboard';
+                    return;
                 }
-            } else {
-                
-                if (userAccessKey.value === "1111") {
-                    statusMessage.textContent = "✓ User Access Key verified! Redirecting...";
-                    statusMessage.className = "status-message success";
-                    setTimeout(() => {
-                        window.location.href = "UserDashboard.html";
-                    }, 1500);
-                } else {
-                    statusMessage.textContent = "✗ Invalid User Access Key ";
-                    statusMessage.className = "status-message error";
-                }
+
+                statusMessage.textContent = "✓ Key verified! Redirecting...";
+                statusMessage.className = "status-message success";
+                setTimeout(() => {
+                    window.location.href = currentRole === 'Admin' ? "admin.html" : "UserDashboard.html";
+                }, 1200);
+            } catch (err) {
+                statusMessage.textContent = "✗ Could not reach the server. Is the backend running?";
+                statusMessage.className = "status-message error";
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify & Access Dashboard';
             }
         });
     </script>
