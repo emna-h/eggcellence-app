@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Eggcellence</title>
     
-   
+    
     <link rel="icon" type="image/png" href="egg-icon.png">
     <link rel="stylesheet" href="admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+   
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -381,8 +383,72 @@
     </div>
 
     <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+        let currentAdminUser = null;
+
+        // ----- Session guard: bounce to Login.html if not a verified Admin -----
+        async function checkSession() {
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include', cache: 'no-store' });
+                const data = await res.json();
+                if (!data.user || !data.user.is_verified) {
+                    window.location.href = 'Login.html';
+                    return false;
+                }
+                if (data.user.role !== 'Admin') {
+                    window.location.href = 'UserDashboard.html';
+                    return false;
+                }
+                currentAdminUser = data.user;
+                return true;
+            } catch (err) {
+                window.location.href = 'Login.html';
+                return false;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             let editingLogIndex = null;
+            let logsData = [];
+            let usersData = [];
+
+            // ----- Load real data from the API (replaces localStorage) -----
+            async function loadLogs() {
+                try {
+                    const res = await fetch(`${API_BASE}/api/admin/inspections`, { credentials: 'include' });
+                    const rows = await res.json();
+                    logsData = rows.map(r => ({
+                        id: r.inspection_id,
+                        inspectorId: r.user_id,
+                        datetime: r.inspection_datetime.replace('T', ' ').slice(0, 16),
+                        inspector: r.inspector_name,
+                        poids: r.poids, hauteur: r.hauteur, coloration: r.coloration,
+                        fraicheur: r.fraicheur, charge: r.charge_rupture, classe: r.classement
+                    }));
+                } catch (err) {
+                    showToast('Could not load inspections from the server.', 'error');
+                }
+            }
+
+            async function loadUsers() {
+                try {
+                    const res = await fetch(`${API_BASE}/api/admin/users`, { credentials: 'include' });
+                    const rows = await res.json();
+                    usersData = rows.map(u => ({
+                        id: u.user_id, name: u.name, email: u.email, role: u.role,
+                        status: u.status, samples: u.samples, isSelf: false
+                    }));
+                    if (currentAdminUser) {
+                        usersData.unshift({
+                            id: currentAdminUser.user_id, name: currentAdminUser.full_name,
+                            email: currentAdminUser.email, role: currentAdminUser.job_title || 'System Admin',
+                            status: 'Active', samples: '-', isSelf: true
+                        });
+                    }
+                } catch (err) {
+                    showToast('Could not load inspectors from the server.', 'error');
+                }
+            }
 
             // --- 1. Sidebar Control ---
             const sidebarToggle = document.getElementById('sidebarToggle');
@@ -421,43 +487,13 @@
                 });
             });
 
-            // --- 3. Storage & Data Handlers ---
+            // --- 3. Data Handlers (now backed by the API, not localStorage) ---
             function getLogsData() {
-                const stored = localStorage.getItem('eggcellence_logs');
-                if (stored) return JSON.parse(stored);
-                
-                const defaultLogs = [
-                    { datetime: '2026-08-07 12:15', inspector: 'Rayen Mahmoudi', poids: '58.20', hauteur: '4.80', coloration: '10.50', fraicheur: '65.10', charge: '38.00', classe: 'A' },
-                    { datetime: '2026-08-06 16:40', inspector: 'Anas Graja', poids: '61.10', hauteur: '3.90', coloration: '8.20', fraicheur: '55.00', charge: '31.50', classe: 'B' },
-                    { datetime: '2026-08-06 09:05', inspector: 'Jihen Ben Hdid', poids: '54.30', hauteur: '2.50', coloration: '7.10', fraicheur: '28.40', charge: '18.20', classe: 'C' },
-                    { datetime: '2026-08-05 11:20', inspector: 'Rayen Mahmoudi', poids: '65.00', hauteur: '6.10', coloration: '14.00', fraicheur: '82.10', charge: '48.90', classe: 'AA' }
-                ];
-                localStorage.setItem('eggcellence_logs', JSON.stringify(defaultLogs));
-                return defaultLogs;
+                return logsData;
             }
 
             function getUsersData() {
-                const stored = localStorage.getItem('eggcellence_users');
-                let users = stored ? JSON.parse(stored) : null;
-
-                const defaultAdmin = { name: 'Admin (You)', email: 'admin@eggcellence.com', role: 'System Admin', status: 'Active', samples: 1, isSelf: true };
-
-                if (!users) {
-                    users = [
-                        defaultAdmin,
-                        { name: 'Jihen Ben Hdid ', email: 'J.Ben.Hdid@eggcellence.com', role: 'Quality Inspector', status: 'Active', samples: 142 },
-                        { name: 'Rayen Mahmoudi', email: 'R.Mahmoudi@eggcellence.com', role: 'Quality Inspector', status: 'Active', samples: 98 },
-                        { name: 'Anas Graja', email: 'A.Graja@eggcellence.com', role: 'Lead Inspector', status: 'Active', samples: 310 }
-                    ];
-                    localStorage.setItem('eggcellence_users', JSON.stringify(users));
-                } else {
-                    const adminExists = users.some(u => u.name === 'Admin (You)' || u.role === 'System Admin');
-                    if (!adminExists) {
-                        users.unshift(defaultAdmin);
-                        localStorage.setItem('eggcellence_users', JSON.stringify(users));
-                    }
-                }
-                return users;
+                return usersData;
             }
 
             function showToast(message, type = 'success') {
@@ -492,12 +528,12 @@
                 if (newLogInspector) {
                     const currentVal = newLogInspector.value;
                     newLogInspector.innerHTML = '';
-                    
+
                     users.forEach(u => {
-                        if (u.status === 'Active' || (editingLogIndex !== null && u.name === currentVal)) {
+                        if (u.status === 'Active' || (editingLogIndex !== null && String(u.id) === currentVal)) {
                             const opt = document.createElement('option');
-                            opt.value = u.name;
-                            opt.textContent = u.name + (u.status === 'Deactivated' ? ' (Deactivated)' : '');
+                            opt.value = u.id;
+                            opt.textContent = u.name + (u.isSelf ? ' (You)' : '') + (u.status === 'Deactivated' ? ' (Deactivated)' : '');
                             newLogInspector.appendChild(opt);
                         }
                     });
@@ -582,15 +618,23 @@
             if (inspectorFilter) inspectorFilter.addEventListener('change', renderMasterLogs);
 
             if (masterLogsTableBody) {
-                masterLogsTableBody.addEventListener('click', function(e) {
+                masterLogsTableBody.addEventListener('click', async function(e) {
                     if (e.target.classList.contains('delete-btn')) {
                         const index = parseInt(e.target.getAttribute('data-index'), 10);
-                        let logs = getLogsData();
-                        logs.splice(index, 1);
-                        localStorage.setItem('eggcellence_logs', JSON.stringify(logs));
-                        renderMasterLogs();
-                        renderCharts();
-                        showToast('Inspection record purged from master database.', 'error');
+                        const logId = getLogsData()[index].id;
+                        try {
+                            const res = await fetch(`${API_BASE}/api/admin/inspections/${logId}`, {
+                                method: 'DELETE', credentials: 'include'
+                            });
+                            if (!res.ok) throw new Error((await res.json()).error || 'Delete failed');
+
+                            await loadLogs();
+                            renderMasterLogs();
+                            renderCharts();
+                            showToast('Inspection record purged from master database.', 'error');
+                        } catch (err) {
+                            showToast(err.message || 'Could not reach the server.', 'error');
+                        }
                     } else if (e.target.classList.contains('edit-btn')) {
                         const index = parseInt(e.target.getAttribute('data-index'), 10);
                         openEditInspectionModal(index);
@@ -639,8 +683,9 @@
                     const nowStr = getCurrentLocalDateTime();
                     dateInput.max = nowStr;
 
+                    // Automatically update datetime to current time during edit
                     document.getElementById('newLogDatetime').value = nowStr;
-                    document.getElementById('newLogInspector').value = log.inspector || 'Admin (You)';
+                    document.getElementById('newLogInspector').value = log.inspectorId;
                     document.getElementById('newLogPoids').value = log.poids || '';
                     document.getElementById('newLogHauteur').value = log.hauteur || '';
                     document.getElementById('newLogColoration').value = log.coloration || '';
@@ -669,7 +714,7 @@
             }
 
             if (addInspectionForm) {
-                addInspectionForm.addEventListener('submit', function(e) {
+                addInspectionForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
 
                     const dtRaw = document.getElementById('newLogDatetime').value;
@@ -717,43 +762,55 @@
                         return;
                     }
 
-                    const selectedInspector = document.getElementById('newLogInspector').value;
+                    const selectedInspectorId = document.getElementById('newLogInspector').value;
                     const formattedDt = dtRaw.replace('T', ' ');
 
-                    const updatedEntry = {
+                    const payload = {
+                        user_id: selectedInspectorId,
                         datetime: formattedDt,
-                        inspector: selectedInspector,
                         poids: poids.toFixed(2),
                         hauteur: hauteur.toFixed(2),
                         coloration: coloration.toFixed(2),
                         fraicheur: fraicheur.toFixed(2),
                         charge: charge.toFixed(2),
-                        classe: classe
+                        classement: classe
                     };
 
-                    let logs = getLogsData();
-
-                    if (editingLogIndex !== null) {
-                        logs[editingLogIndex] = updatedEntry;
-                        localStorage.setItem('eggcellence_logs', JSON.stringify(logs));
-                        showToast('Inspection record updated successfully.');
-                    } else {
-                        logs.unshift(updatedEntry);
-                        localStorage.setItem('eggcellence_logs', JSON.stringify(logs));
-
-                        let users = getUsersData();
-                        const targetUser = users.find(u => u.name === selectedInspector);
-                        if (targetUser) {
-                            targetUser.samples = (targetUser.samples || 0) + 1;
-                            localStorage.setItem('eggcellence_users', JSON.stringify(users));
-                            renderUsersTable();
+                    try {
+                        let res;
+                        if (editingLogIndex !== null) {
+                            const logId = getLogsData()[editingLogIndex].id;
+                            res = await fetch(`${API_BASE}/api/admin/inspections/${logId}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify(payload)
+                            });
+                        } else {
+                            res = await fetch(`${API_BASE}/api/admin/inspections`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify(payload)
+                            });
                         }
-                        showToast(`New inspection entry logged for ${selectedInspector}.`);
-                    }
+                        const result = await res.json();
+                        if (!res.ok) throw new Error(result.error || 'Save failed');
 
-                    renderMasterLogs();
-                    renderCharts();
-                    closeInspectionModal();
+                        await loadLogs();
+                        await loadUsers();
+
+                        showToast(editingLogIndex !== null
+                            ? 'Inspection record updated successfully.'
+                            : 'New inspection entry logged.');
+
+                        renderUsersTable();
+                        renderMasterLogs();
+                        renderCharts();
+                        closeInspectionModal();
+                    } catch (err) {
+                        showToast(err.message || 'Could not reach the server.', 'error');
+                    }
                 });
             }
 
@@ -837,35 +894,49 @@
             }
 
             if (usersTableBody) {
-                usersTableBody.addEventListener('click', function(e) {
+                usersTableBody.addEventListener('click', async function(e) {
                     if (e.target.classList.contains('toggle-status-btn')) {
                         const index = parseInt(e.target.getAttribute('data-index'), 10);
-                        let users = getUsersData();
-                        
-                        const currentStatus = users[index].status;
-                        const newStatus = currentStatus === 'Active' ? 'Deactivated' : 'Active';
-                        users[index].status = newStatus;
-                        
-                        localStorage.setItem('eggcellence_users', JSON.stringify(users));
-                        renderUsersTable();
-                        renderMasterLogs();
+                        const user = getUsersData()[index];
+                        const newStatus = user.status === 'Active' ? 'Deactivated' : 'Active';
 
-                        if (newStatus === 'Active') {
-                            showToast(`Inspector ${users[index].name} is now Active.`);
-                        } else {
-                            showToast(`Inspector ${users[index].name} has been Deactivated.`, 'error');
+                        try {
+                            const res = await fetch(`${API_BASE}/api/admin/users/${user.id}/status`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({ status: newStatus })
+                            });
+                            if (!res.ok) throw new Error((await res.json()).error || 'Update failed');
+
+                            await loadUsers();
+                            renderUsersTable();
+                            renderMasterLogs();
+
+                            showToast(newStatus === 'Active'
+                                ? `Inspector ${user.name} is now Active.`
+                                : `Inspector ${user.name} has been Deactivated.`, newStatus === 'Active' ? 'success' : 'error');
+                        } catch (err) {
+                            showToast(err.message || 'Could not reach the server.', 'error');
                         }
                     } else if (e.target.classList.contains('delete-user-btn')) {
                         const index = parseInt(e.target.getAttribute('data-index'), 10);
-                        let users = getUsersData();
-                        const removedName = users[index].name;
+                        const user = getUsersData()[index];
 
-                        users.splice(index, 1);
-                        localStorage.setItem('eggcellence_users', JSON.stringify(users));
+                        try {
+                            const res = await fetch(`${API_BASE}/api/admin/users/${user.id}`, {
+                                method: 'DELETE', credentials: 'include'
+                            });
+                            if (!res.ok) throw new Error((await res.json()).error || 'Delete failed');
 
-                        renderUsersTable();
-                        renderMasterLogs();
-                        showToast(`Inspector "${removedName}" has been removed from system.`, 'error');
+                            await loadUsers();
+                            await loadLogs();
+                            renderUsersTable();
+                            renderMasterLogs();
+                            showToast(`Inspector "${user.name}" has been removed from system.`, 'error');
+                        } catch (err) {
+                            showToast(err.message || 'Could not reach the server.', 'error');
+                        }
                     }
                 });
             }
@@ -887,24 +958,30 @@
             }
 
             if (addInspectorForm) {
-                addInspectorForm.addEventListener('submit', function(e) {
+                addInspectorForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
 
-                    const newUser = {
-                        name: document.getElementById('newInspectorName').value,
-                        email: document.getElementById('newInspectorEmail').value,
-                        role: document.getElementById('newInspectorRole').value,
-                        status: 'Active',
-                        samples: 0
-                    };
+                    const name = document.getElementById('newInspectorName').value;
+                    const email = document.getElementById('newInspectorEmail').value;
+                    const role = document.getElementById('newInspectorRole').value;
 
-                    const users = getUsersData();
-                    users.push(newUser);
-                    localStorage.setItem('eggcellence_users', JSON.stringify(users));
+                    try {
+                        const res = await fetch(`${API_BASE}/api/admin/users`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ name, email, role })
+                        });
+                        const result = await res.json();
+                        if (!res.ok) throw new Error(result.error || 'Could not add inspector');
 
-                    renderUsersTable();
-                    closeModal();
-                    showToast(`${newUser.name} added as a new inspector.`);
+                        await loadUsers();
+                        renderUsersTable();
+                        closeModal();
+                        showToast(`${name} added as a new inspector.`);
+                    } catch (err) {
+                        showToast(err.message || 'Could not reach the server.', 'error');
+                    }
                 });
             }
 
@@ -983,18 +1060,22 @@
 
             // --- 10. Settings Form Persistence ---
             const settingsForm = document.getElementById('settingsForm');
-            function loadSettings() {
-                const settings = JSON.parse(localStorage.getItem('eggcellence_settings')) || {
-                    cutoffAA: 72, cutoffA: 60, cutoffB: 31, minStrength: 25.0
-                };
-                if (document.getElementById('cutoffAA')) document.getElementById('cutoffAA').value = settings.cutoffAA;
-                if (document.getElementById('cutoffA')) document.getElementById('cutoffA').value = settings.cutoffA;
-                if (document.getElementById('cutoffB')) document.getElementById('cutoffB').value = settings.cutoffB;
-                if (document.getElementById('minStrength')) document.getElementById('minStrength').value = settings.minStrength;
+            async function loadSettings() {
+                try {
+                    const res = await fetch(`${API_BASE}/api/admin/settings`, { credentials: 'include' });
+                    const settings = await res.json();
+                    if (!res.ok || !settings.cutoff_aa) return;
+                    if (document.getElementById('cutoffAA')) document.getElementById('cutoffAA').value = settings.cutoff_aa;
+                    if (document.getElementById('cutoffA')) document.getElementById('cutoffA').value = settings.cutoff_a;
+                    if (document.getElementById('cutoffB')) document.getElementById('cutoffB').value = settings.cutoff_b;
+                    if (document.getElementById('minStrength')) document.getElementById('minStrength').value = settings.min_strength;
+                } catch (err) {
+                    showToast('Could not load grading settings from the server.', 'error');
+                }
             }
 
             if (settingsForm) {
-                settingsForm.addEventListener('submit', function(e) {
+                settingsForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
                     const settings = {
                         cutoffAA: document.getElementById('cutoffAA').value,
@@ -1002,16 +1083,43 @@
                         cutoffB: document.getElementById('cutoffB').value,
                         minStrength: document.getElementById('minStrength').value
                     };
-                    localStorage.setItem('eggcellence_settings', JSON.stringify(settings));
-                    showToast('Quality parameters updated across facility system.');
+                    try {
+                        const res = await fetch(`${API_BASE}/api/admin/settings`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify(settings)
+                        });
+                        if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+                        showToast('Quality parameters updated across facility system.');
+                    } catch (err) {
+                        showToast(err.message || 'Could not reach the server.', 'error');
+                    }
                 });
             }
 
-            // Initial Execution
-            loadSettings();
-            renderUsersTable();
-            renderMasterLogs();
-            renderCharts();
+            // Logout
+            const logoutLinks = document.querySelectorAll('a[href="Login.html"]');
+            logoutLinks.forEach(link => {
+                link.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+                    window.location.href = 'Login.html';
+                });
+            });
+
+            // ----- Initial Execution -----
+            async function init() {
+                const ok = await checkSession();
+                if (!ok) return;   // already redirected
+                await loadUsers();
+                await loadLogs();
+                await loadSettings();
+                renderUsersTable();
+                renderMasterLogs();
+                renderCharts();
+            }
+            init();
         });
     </script>
 </body>
