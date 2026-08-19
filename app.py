@@ -1,6 +1,6 @@
 """
 app.py — Eggcellence API, rewired to SQL Server (via db.py) with real
-sessions and real access keys. 
+sessions and real access keys.
 Run:  python app.py            (serves http://localhost:5000)
 """
 import os
@@ -14,6 +14,7 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 from db import get_db_connection, row_to_dict
+from email_utils import send_signup_confirmation, send_password_change_confirmation
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-this-in-production")
@@ -95,6 +96,8 @@ def signup():
         conn.close()
         return jsonify({"error": "An account with that email already exists"}), 409
     conn.close()
+
+    send_signup_confirmation(data["email"], data["fullName"], data["role"], data["departement"])
 
     session["user_id"] = new_id
     session["role"] = data["role"]
@@ -201,6 +204,8 @@ def reset_password():
 
     if updated == 0:
         return jsonify({"error": "No account found with that email"}), 404
+
+    send_password_change_confirmation(email)
     return jsonify({"ok": True}), 200
 
 
