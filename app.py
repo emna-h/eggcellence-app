@@ -1,7 +1,6 @@
 """
 app.py — Eggcellence API, rewired to SQL Server (via db.py) with real
-sessions and real access keys.
-
+sessions and real access keys. 
 Run:  python app.py            (serves http://localhost:5000)
 """
 import os
@@ -163,8 +162,12 @@ def logout():
 
 @app.route("/api/auth/me", methods=["GET"])
 def whoami():
+    def no_cache(resp):
+        resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        return resp
+
     if "user_id" not in session:
-        return jsonify({"user": None}), 200
+        return no_cache(jsonify({"user": None})), 200
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
@@ -176,10 +179,10 @@ def whoami():
     if not row or row.status == "Deactivated":
         conn.close()
         session.clear()
-        return jsonify({"user": None}), 200
+        return no_cache(jsonify({"user": None})), 200
     result = row_to_dict(cur, row)
     conn.close()
-    return jsonify({"user": result}), 200
+    return no_cache(jsonify({"user": result})), 200
 
 
 @app.route("/api/auth/reset-password", methods=["POST"])
