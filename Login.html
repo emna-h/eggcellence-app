@@ -167,15 +167,94 @@
 
         password.addEventListener('input', checkPasswords);
         confirmPassword.addEventListener('input', checkPasswords);
-        
-    const signupForm = document.querySelector('.signup');
-    signupForm.addEventListener('submit', (e) => {
-    e.preventDefault(); 
 
-    const selectedRole = document.getElementById('role').value;
-    localStorage.setItem('userRole', selectedRole);
-    window.location.href = 'VerifyRole.html';
-});
+        const API_BASE = 'http://127.0.0.1:5000';
+
+        // ----- SIGN UP -----
+        const signupForm = document.querySelector('.signup');
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const payload = {
+                fullName: signupForm.querySelector('[name="fullName"]').value,
+                email: signupForm.querySelector('[name="email"]').value,
+                role: document.getElementById('role').value,
+                departement: document.getElementById('departement').value,
+                password: password.value
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating account...';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    matchMessage.textContent = data.error || 'Signup failed.';
+                    matchMessage.className = 'match-message error';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign up';
+                    return;
+                }
+
+                // VerifyRole.html reads the session server-side via /api/auth/me,
+                // so nothing needs to be stashed in localStorage anymore.
+                window.location.href = 'VerifyRole.html';
+            } catch (err) {
+                matchMessage.textContent = 'Could not reach the server. Is the backend running?';
+                matchMessage.className = 'match-message error';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign up';
+            }
+        });
+
+        // ----- LOG IN -----
+        const loginForm = document.querySelector('.login');
+        const loginBtn = loginForm.querySelector('button[type="submit"]');
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const payload = {
+                email: loginForm.querySelector('[name="email"]').value,
+                password: document.getElementById('loginPsw').value
+            };
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert(data.error || 'Login failed.');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Login';
+                    return;
+                }
+
+                if (!data.is_verified) {
+                    window.location.href = 'VerifyRole.html';
+                    return;
+                }
+                window.location.href = data.role === 'Admin' ? 'admin.html' : 'UserDashboard.html';
+            } catch (err) {
+                alert('Could not reach the server. Is the backend running?');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
+        });
     </script>
 </body>
 </html>
