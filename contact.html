@@ -133,7 +133,7 @@
             }
         }
 
-        document.getElementById('contactForm').addEventListener('submit', (e) => {
+        document.getElementById('contactForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const statusMessage = document.getElementById('statusMessage');
             const sendBtn = document.getElementById('sendBtn');
@@ -141,15 +141,47 @@
             sendBtn.disabled = true;
             sendBtn.textContent = "Sending Ticket...";
 
-            setTimeout(() => {
-                statusMessage.textContent = "✓ Support ticket submitted successfully! Ticket #4892";
+            // multipart/form-data, not JSON — the backend needs the raw
+            // file object, not a filename string.
+            const formData = new FormData();
+            formData.append('fullName', document.getElementById('fullName').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('facility', document.getElementById('facility').value);
+            formData.append('role', document.getElementById('role').value);
+            formData.append('category', document.getElementById('category').value);
+            formData.append('priority', document.getElementById('priorityValue').value);
+            formData.append('message', document.getElementById('message').value);
+            const fileInput = document.getElementById('fileUpload');
+            if (fileInput.files[0]) formData.append('attachment', fileInput.files[0]);
+
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/support/tickets', {
+                    method: 'POST',
+                    body: formData   // no Content-Type header — the browser sets the multipart boundary itself
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    statusMessage.textContent = `✗ ${data.error || 'Could not submit ticket.'}`;
+                    statusMessage.className = "status-message error";
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = "Send Support Ticket";
+                    return;
+                }
+
+                statusMessage.textContent = `✓ Support ticket submitted successfully! Ticket #${data.ticket_id}`;
                 statusMessage.className = "status-message success";
                 sendBtn.style.display = "none";
-                
+
                 setTimeout(() => {
                     window.location.href = "Login.html";
                 }, 2000);
-            }, 1200);
+            } catch (err) {
+                statusMessage.textContent = "✗ Could not reach the server. Is the backend running?";
+                statusMessage.className = "status-message error";
+                sendBtn.disabled = false;
+                sendBtn.textContent = "Send Support Ticket";
+            }
         });
     </script>
 </body>
