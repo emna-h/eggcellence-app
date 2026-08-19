@@ -245,6 +245,31 @@
 
     
      <script>
+    const API_BASE = 'http://127.0.0.1:5000';
+
+    // ----- Session guard: bounce to Login.html if not logged in as a User -----
+    (async function checkSession() {
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include', cache: 'no-store' });
+            const data = await res.json();
+            if (!data.user || !data.user.is_verified) {
+                window.location.href = 'Login.html';
+                return;
+            }
+            if (data.user.role !== 'User') {
+                window.location.href = 'admin.html';
+            }
+        } catch (err) {
+            window.location.href = 'Login.html';
+        }
+    })();
+
+    document.querySelector('.logout-btn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+        window.location.href = 'Login.html';
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
@@ -352,6 +377,7 @@
         }
 
         function applyRowData(row, data) {
+            row.dataset.id = data.id;
             row.dataset.datetime = data.datetime;
             row.dataset.poids = data.poids;
             row.dataset.hauteur = data.hauteur;
@@ -361,6 +387,34 @@
             row.dataset.charge = data.charge;
             row.innerHTML = buildRowHTML(data);
         }
+
+        // ----- Load existing inspections from the API on page load -----
+        async function loadInspections() {
+            try {
+                const res = await fetch(`${API_BASE}/api/inspections/mine`, { credentials: 'include' });
+                const rows = await res.json();
+                if (!res.ok) return;
+
+                logsTableBody.innerHTML = '';
+                if (rows.length === 0) {
+                    showEmptyState();
+                    return;
+                }
+                rows.forEach(r => {
+                    const row = document.createElement('tr');
+                    applyRowData(row, {
+                        id: r.inspection_id,
+                        datetime: r.inspection_datetime.replace('T', ' ').slice(0, 16),
+                        poids: r.poids, hauteur: r.hauteur, coloration: r.coloration,
+                        fraicheur: r.fraicheur, classement: r.classement, charge: r.charge_rupture
+                    });
+                    logsTableBody.appendChild(row);
+                });
+            } catch (err) {
+                showToast('Could not load inspections from the server.', 'error');
+            }
+        }
+        loadInspections();
 
         function resetToCreateMode() {
             editingRow = null;
@@ -383,7 +437,7 @@
         }
 
         if (form) {
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
                 const selectedDate = new Date(datetimeInput.value);
@@ -404,24 +458,46 @@
                     charge: parseFloat(document.getElementById('chargeRupture').value).toFixed(2)
                 };
 
-                if (editingRow) {
-                    applyRowData(editingRow, data);
-                    showToast('Sample record successfully updated!');
-                    resetToCreateMode();
-                } else {
-    
-                    const emptyRow = document.getElementById('emptyState');
-                    if (emptyRow) emptyRow.remove();
+                try {
+                    if (editingRow) {
+                        const res = await fetch(`${API_BASE}/api/inspections/${editingRow.dataset.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify(data)
+                        });
+                        if (!res.ok) throw new Error((await res.json()).error || 'Update failed');
 
-                    const newRow = document.createElement('tr');
-                    applyRowData(newRow, data);
-                    logsTableBody.insertBefore(newRow, logsTableBody.firstChild);
-                    showToast('Sample record successfully logged!');
+                        data.id = editingRow.dataset.id;
+                        applyRowData(editingRow, data);
+                        showToast('Sample record successfully updated!');
+                        resetToCreateMode();
+                    } else {
+                        const res = await fetch(`${API_BASE}/api/inspections`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify(data)
+                        });
+                        const result = await res.json();
+                        if (!res.ok) throw new Error(result.error || 'Save failed');
 
-                    form.reset();
-                    const updatedNow = getCurrentDateTime();
-                    datetimeInput.value = updatedNow;
-                    datetimeInput.max = updatedNow;
+                        const emptyRow = document.getElementById('emptyState');
+                        if (emptyRow) emptyRow.remove();
+
+                        data.id = result.inspection_id;
+                        const newRow = document.createElement('tr');
+                        applyRowData(newRow, data);
+                        logsTableBody.insertBefore(newRow, logsTableBody.firstChild);
+                        showToast('Sample record successfully logged!');
+
+                        form.reset();
+                        const updatedNow = getCurrentDateTime();
+                        datetimeInput.value = updatedNow;
+                        datetimeInput.max = updatedNow;
+                    }
+                } catch (err) {
+                    showToast(err.message || 'Could not reach the server.', 'error');
                 }
 
                 submitBtn.disabled = false;
@@ -430,15 +506,25 @@
         
 
         if (logsTableBody) {
-            logsTableBody.addEventListener('click', function(e) {
+            logsTableBody.addEventListener('click', async function(e) {
 
                 if (e.target.classList.contains('delete-btn')) {
                     const row = e.target.closest('tr');
-                    row.remove();
-                    showToast('Inspection record deleted.', 'error');
+                    try {
+                        const res = await fetch(`${API_BASE}/api/inspections/${row.dataset.id}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                        });
+                        if (!res.ok) throw new Error((await res.json()).error || 'Delete failed');
 
-                    if (logsTableBody.children.length === 0) {
-                        showEmptyState();
+                        row.remove();
+                        showToast('Inspection record deleted.', 'error');
+
+                        if (logsTableBody.children.length === 0) {
+                            showEmptyState();
+                        }
+                    } catch (err) {
+                        showToast(err.message || 'Could not reach the server.', 'error');
                     }
                     return;
                 }
