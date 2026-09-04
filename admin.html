@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Eggcellence</title>
     
-    
+   
     <link rel="icon" type="image/png" href="egg-icon.png">
     <link rel="stylesheet" href="admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-   
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -57,6 +56,10 @@
                     </button>
                     <button class="nav-item" data-target="master-logs">
                         <span class="nav-label">Master Logs</span>
+                    </button>
+                    <button class="nav-item" data-target="tickets">
+                        <span class="nav-label">Support Tickets</span>
+                        <span id="ticketBadge" class="nav-badge hidden">0</span>
                     </button>
                     <button class="nav-item" data-target="analytics">
                         <span class="nav-label">Analytics & Trends</span>
@@ -180,6 +183,53 @@
                                     <th>Rupture (N)</th>
                                     <th>Grade</th>
                                     <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dynamic JS Population -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- PAGE: SUPPORT TICKETS -->
+            <div id="page-tickets" class="page-view hidden">
+                <section class="table-card">
+                    <div class="card-header space-between">
+                        <div>
+                            <h2>Support Tickets</h2>
+                            <p>Issues and requests submitted through Contact &amp; Support.</p>
+                        </div>
+                    </div>
+
+                    <div class="filter-bar">
+                        <select id="ticketStatusFilter" class="filter-input">
+                            <option value="ALL">All Statuses</option>
+                            <option value="Open">Open</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved</option>
+                        </select>
+                        <select id="ticketPriorityFilter" class="filter-input">
+                            <option value="ALL">All Priorities</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="ticketsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Dept.</th>
+                                    <th>Category</th>
+                                    <th>Priority</th>
+                                    <th>Message</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -411,6 +461,20 @@
             let editingLogIndex = null;
             let logsData = [];
             let usersData = [];
+            let ticketsData = [];
+            let lastSeenTicketId = 0;   // updated after the first load, so we don't toast on page load itself
+
+            async function loadTickets() {
+                try {
+                    const res = await fetch(`${API_BASE}/api/admin/support/tickets`, { credentials: 'include' });
+                    const rows = await res.json();
+                    ticketsData = rows;
+                    return rows;
+                } catch (err) {
+                    showToast('Could not load support tickets from the server.', 'error');
+                    return [];
+                }
+            }
 
             // ----- Load real data from the API (replaces localStorage) -----
             async function loadLogs() {
@@ -479,6 +543,11 @@
                 if (targetPage === 'overview' || targetPage === 'analytics') {
                     renderCharts();
                 }
+                if (targetPage === 'tickets') {
+                    // Visiting the page counts as "seen" — clear the notification badge
+                    const badge = document.getElementById('ticketBadge');
+                    if (badge) { badge.classList.add('hidden'); badge.textContent = '0'; }
+                }
             }
 
             navItems.forEach(btn => {
@@ -494,6 +563,110 @@
 
             function getUsersData() {
                 return usersData;
+            }
+
+            // --- Support Tickets rendering ---
+            function renderTicketsTable() {
+                const tbody = document.querySelector('#ticketsTable tbody');
+                if (!tbody) return;
+
+                const statusVal = document.getElementById('ticketStatusFilter')?.value || 'ALL';
+                const priorityVal = document.getElementById('ticketPriorityFilter')?.value || 'ALL';
+
+                tbody.innerHTML = '';
+                const filtered = ticketsData.filter(t =>
+                    (statusVal === 'ALL' || t.status === statusVal) &&
+                    (priorityVal === 'ALL' || t.priority === priorityVal)
+                );
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--text-muted); padding: 24px;">No tickets match this filter.</td></tr>`;
+                    return;
+                }
+
+                filtered.forEach(t => {
+                    const row = document.createElement('tr');
+                    const priorityClass = t.priority === 'Urgent' ? 'badge-c' : t.priority === 'Medium' ? 'badge-b' : 'badge-aa';
+                    const shortMessage = t.message.length > 60 ? t.message.slice(0, 60) + '…' : t.message;
+                    const dateDisplay = t.created_at.replace('T', ' ').slice(0, 16);
+
+                    row.innerHTML = `
+                        <td>${dateDisplay}</td>
+                        <td>${t.full_name}</td>
+                        <td>${t.email}</td>
+                        <td>${t.department}</td>
+                        <td>${t.category}</td>
+                        <td><span class="badge ${priorityClass}">${t.priority}</span></td>
+                        <td title="${t.message.replace(/"/g, '&quot;')}">${shortMessage}</td>
+                        <td>
+                            <select class="filter-input ticket-status-select" data-id="${t.ticket_id}">
+                                <option value="Open" ${t.status === 'Open' ? 'selected' : ''}>Open</option>
+                                <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="Resolved" ${t.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                            </select>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                tbody.querySelectorAll('.ticket-status-select').forEach(select => {
+                    select.addEventListener('change', async (e) => {
+                        const ticketId = e.target.getAttribute('data-id');
+                        const newStatus = e.target.value;
+                        try {
+                            const res = await fetch(`${API_BASE}/api/admin/support/tickets/${ticketId}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({ status: newStatus })
+                            });
+                            if (!res.ok) throw new Error((await res.json()).error || 'Update failed');
+
+                            const local = ticketsData.find(t => String(t.ticket_id) === String(ticketId));
+                            if (local) local.status = newStatus;
+                            showToast(`Ticket #${ticketId} marked as ${newStatus}.`);
+                        } catch (err) {
+                            showToast(err.message || 'Could not update ticket status.', 'error');
+                            renderTicketsTable(); // revert the dropdown to the real value
+                        }
+                    });
+                });
+            }
+
+            const ticketStatusFilter = document.getElementById('ticketStatusFilter');
+            const ticketPriorityFilter = document.getElementById('ticketPriorityFilter');
+            if (ticketStatusFilter) ticketStatusFilter.addEventListener('change', renderTicketsTable);
+            if (ticketPriorityFilter) ticketPriorityFilter.addEventListener('change', renderTicketsTable);
+
+            // --- Notification polling: checks for new tickets every 20s ---
+            async function pollForNewTickets() {
+                const rows = await loadTickets();
+                if (rows.length === 0) return;
+
+                const maxId = Math.max(...rows.map(t => t.ticket_id));
+                const newOnes = rows.filter(t => t.ticket_id > lastSeenTicketId);
+
+                if (lastSeenTicketId !== 0 && newOnes.length > 0) {
+                    newOnes.forEach(t => {
+                        showToast(`New support ticket from ${t.full_name}: "${t.category}" (${t.priority})`, 'error');
+                    });
+
+                    // Only bump the badge if the admin isn't already looking at this page
+                    const ticketsPageVisible = !document.getElementById('page-tickets')?.classList.contains('hidden');
+                    if (!ticketsPageVisible) {
+                        const badge = document.getElementById('ticketBadge');
+                        if (badge) {
+                            const current = parseInt(badge.textContent, 10) || 0;
+                            badge.textContent = current + newOnes.length;
+                            badge.classList.remove('hidden');
+                        }
+                    }
+                }
+
+                lastSeenTicketId = maxId;
+
+                const ticketsPageVisible = !document.getElementById('page-tickets')?.classList.contains('hidden');
+                if (ticketsPageVisible) renderTicketsTable();
             }
 
             function showToast(message, type = 'success') {
@@ -1115,9 +1288,19 @@
                 await loadUsers();
                 await loadLogs();
                 await loadSettings();
+
+                const initialTickets = await loadTickets();
+                if (initialTickets.length > 0) {
+                    lastSeenTicketId = Math.max(...initialTickets.map(t => t.ticket_id));
+                }
+
                 renderUsersTable();
                 renderMasterLogs();
+                renderTicketsTable();
                 renderCharts();
+
+                // Check for new tickets every 20 seconds
+                setInterval(pollForNewTickets, 20000);
             }
             init();
         });
