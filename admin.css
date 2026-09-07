@@ -1,3 +1,7 @@
+/* ==========================================================================
+   Eggcellence Admin Dashboard - Unified Styling System
+   ========================================================================== */
+
 :root {
     --primary-color: #2A9D8F;
     --primary-dark: #218377;
@@ -206,6 +210,18 @@ body {
 
 .nav-badge.hidden {
     display: none;
+}
+
+.powerbi-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+}
+
+.powerbi-btn {
+    font-size: 1.1rem;
+    padding: 16px 36px;
 }
 
 /* --- Main View Container --- */
