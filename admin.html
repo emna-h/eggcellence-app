@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Eggcellence</title>
     
-   
+    <!-- 🥚 Styling & Fonts -->
     <link rel="icon" type="image/png" href="egg-icon.png">
     <link rel="stylesheet" href="admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -80,64 +78,12 @@
             <!-- PAGE 1: OVERVIEW DASHBOARD -->
             <div id="page-overview" class="page-view active">
                 <div class="page-title">
-                    <h2>Facility Quality Overview</h2>
+                    <h2>Quality and Inspection Overview</h2>
                     <p>Real-time system statistics and aggregate inspection performance.</p>
                 </div>
 
-                <!-- KPI Cards Grid -->
-                <div class="kpi-grid">
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <span class="kpi-title">Total Samples</span>
-                        </div>
-                        <div class="kpi-value" id="kpiTotal">0</div>
-                        <span class="kpi-subtext">Logged in database</span>
-                    </div>
-
-                    <div class="kpi-card success">
-                        <div class="kpi-header">
-                            <span class="kpi-title">Pass Rate (Grade AA/A)</span>
-                        </div>
-                        <div class="kpi-value" id="kpiPassRate">0%</div>
-                        <span class="kpi-subtext">Premium market quality</span>
-                    </div>
-
-                    <div class="kpi-card danger">
-                        <div class="kpi-header">
-                            <span class="kpi-title">Reject Rate (Grade C)</span>
-                        </div>
-                        <div class="kpi-value" id="kpiRejectRate">0%</div>
-                        <span class="kpi-subtext">Requires attention</span>
-                    </div>
-
-                    <div class="kpi-card info">
-                        <div class="kpi-header">
-                            <span class="kpi-title">Active Inspectors</span>
-                        </div>
-                        <div class="kpi-value" id="kpiInspectors">0</div>
-                        <span class="kpi-subtext">Logging active data</span>
-                    </div>
-                </div>
-
-                <!-- Overview Charts Row -->
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="card-header">
-                            <h3>Grade Distribution Breakdown</h3>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="overviewGradeChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="chart-card">
-                        <div class="card-header">
-                            <h3>Average Freshness (Haugh Unit)</h3>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="overviewHuChart"></canvas>
-                        </div>
-                    </div>
+                <div class="powerbi-placeholder">
+                    <button class="btn btn-primary powerbi-btn" id="overviewPowerBiBtn">📊 Power BI Report</button>
                 </div>
             </div>
 
@@ -247,15 +193,8 @@
                     <p>Correlate shell thickness, Haugh units, and grade stability trends.</p>
                 </div>
 
-                <div class="charts-grid single-column">
-                    <div class="chart-card">
-                        <div class="card-header">
-                            <h3>Shell Strength (Charge de rupture) vs. Weight Scatter Trend</h3>
-                        </div>
-                        <div class="chart-wrapper large">
-                            <canvas id="scatterAnalyticsChart"></canvas>
-                        </div>
-                    </div>
+                <div class="powerbi-placeholder">
+                    <button class="btn btn-primary powerbi-btn" id="analyticsPowerBiBtn">📊 Power BI Report</button>
                 </div>
             </div>
 
@@ -527,7 +466,7 @@
             if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', toggleSidebar);
 
             // --- 2. Page Navigation Switcher ---
-            const navItems = document.querySelectorAll('.nav-item');
+            const navItems = document.querySelectorAll('.nav-item[data-target]');
             const pageViews = document.querySelectorAll('.page-view');
 
             function switchPage(targetPage) {
@@ -540,9 +479,6 @@
                 if (activeBtn) activeBtn.classList.add('active');
                 if (activePage) activePage.classList.remove('hidden');
 
-                if (targetPage === 'overview' || targetPage === 'analytics') {
-                    renderCharts();
-                }
                 if (targetPage === 'tickets') {
                     // Visiting the page counts as "seen" — clear the notification badge
                     const badge = document.getElementById('ticketBadge');
@@ -775,15 +711,6 @@
                         masterLogsTableBody.appendChild(tr);
                     }
                 });
-
-                // Update KPIs
-                const users = getUsersData();
-                const activeCount = users.filter(u => u.status === 'Active').length;
-
-                document.getElementById('kpiTotal').textContent = totalCount;
-                document.getElementById('kpiPassRate').textContent = totalCount ? `${((passCount / totalCount) * 100).toFixed(1)}%` : '0%';
-                document.getElementById('kpiRejectRate').textContent = totalCount ? `${((rejectCount / totalCount) * 100).toFixed(1)}%` : '0%';
-                document.getElementById('kpiInspectors').textContent = activeCount;
             }
 
             if (searchInput) searchInput.addEventListener('input', renderMasterLogs);
@@ -803,7 +730,6 @@
 
                             await loadLogs();
                             renderMasterLogs();
-                            renderCharts();
                             showToast('Inspection record purged from master database.', 'error');
                         } catch (err) {
                             showToast(err.message || 'Could not reach the server.', 'error');
@@ -979,7 +905,6 @@
 
                         renderUsersTable();
                         renderMasterLogs();
-                        renderCharts();
                         closeInspectionModal();
                     } catch (err) {
                         showToast(err.message || 'Could not reach the server.', 'error');
@@ -1158,79 +1083,6 @@
                 });
             }
 
-            // --- 9. Chart Visualizations ---
-            let gradeChartInstance = null;
-            let huChartInstance = null;
-            let scatterChartInstance = null;
-
-            function renderCharts() {
-                const logs = getLogsData();
-
-                const counts = { AA: 0, A: 0, B: 0, C: 0 };
-                logs.forEach(l => {
-                    if (counts[l.classe] !== undefined) counts[l.classe]++;
-                });
-
-                const ctxGrade = document.getElementById('overviewGradeChart');
-                if (ctxGrade) {
-                    if (gradeChartInstance) gradeChartInstance.destroy();
-                    gradeChartInstance = new Chart(ctxGrade, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Grade AA', 'Grade A', 'Grade B', 'Grade C'],
-                            datasets: [{
-                                data: [counts.AA, counts.A, counts.B, counts.C],
-                                backgroundColor: ['#2A9D8F', '#4EA8DE', '#F4A261', '#E63946']
-                            }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false }
-                    });
-                }
-
-                const ctxHu = document.getElementById('overviewHuChart');
-                if (ctxHu) {
-                    if (huChartInstance) huChartInstance.destroy();
-                    huChartInstance = new Chart(ctxHu, {
-                        type: 'line',
-                        data: {
-                            labels: logs.map(l => l.datetime.slice(5, 16)).reverse(),
-                            datasets: [{
-                                label: 'Haugh Unit (Freshness)',
-                                data: logs.map(l => parseFloat(l.fraicheur)).reverse(),
-                                borderColor: '#2A9D8F',
-                                backgroundColor: 'rgba(42, 157, 143, 0.1)',
-                                fill: true,
-                                tension: 0.3
-                            }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false }
-                    });
-                }
-
-                const ctxScatter = document.getElementById('scatterAnalyticsChart');
-                if (ctxScatter) {
-                    if (scatterChartInstance) scatterChartInstance.destroy();
-                    scatterChartInstance = new Chart(ctxScatter, {
-                        type: 'scatter',
-                        data: {
-                            datasets: [{
-                                label: 'Sample Rupture Force vs. Weight',
-                                data: logs.map(l => ({ x: parseFloat(l.poids), y: parseFloat(l.charge) })),
-                                backgroundColor: '#E63946'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                x: { title: { display: true, text: 'Weight (grams)' } },
-                                y: { title: { display: true, text: 'Shell Strength (Newtons)' } }
-                            }
-                        }
-                    });
-                }
-            }
-
             // --- 10. Settings Form Persistence ---
             const settingsForm = document.getElementById('settingsForm');
             async function loadSettings() {
@@ -1281,6 +1133,17 @@
                 });
             });
 
+            // --- Power BI report buttons (same-tab navigation, not a new tab) ---
+            const POWERBI_REPORT_URL = 'https://app.powerbi.com/groups/me/reports/789986bc-ddc6-419a-9e6d-180b63c7827e/c154a3cbd387dcf5e3b1?experience=power-bi';
+            const overviewPowerBiBtn = document.getElementById('overviewPowerBiBtn');
+            const analyticsPowerBiBtn = document.getElementById('analyticsPowerBiBtn');
+            if (overviewPowerBiBtn) overviewPowerBiBtn.addEventListener('click', () => {
+                window.location.href = POWERBI_REPORT_URL;
+            });
+            if (analyticsPowerBiBtn) analyticsPowerBiBtn.addEventListener('click', () => {
+                window.location.href = POWERBI_REPORT_URL;
+            });
+
             // ----- Initial Execution -----
             async function init() {
                 const ok = await checkSession();
@@ -1297,7 +1160,6 @@
                 renderUsersTable();
                 renderMasterLogs();
                 renderTicketsTable();
-                renderCharts();
 
                 // Check for new tickets every 20 seconds
                 setInterval(pollForNewTickets, 20000);
